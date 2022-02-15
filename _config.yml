@@ -1,0 +1,9 @@
+title: 偶可不乖呢
+description: Welcome to Smartmx's Blog. 
+show_downloads: true
+plugins:
+  - jekyll-relative-links
+relative_links:
+  enabled: true
+  collections: true
+theme: jekyll-theme-cayman
