@@ -5,7 +5,7 @@
 Tiny Macro OS是借鉴了protothread思想的宏定义调度内核。  
 从各个论坛汲取代码汇总而成,  
 主要来自于阿莫论坛的smset率先提出的小小调度器,后经过多人优化修改:  
-[https://www.amobbs.com/thread-5508720-2-1.html](https://www.amobbs.com/thread-5508720-2-1.html)
+[https://www.amobbs.com/thread-5508720-2-1.html](https://www.amobbs.com/thread-5508720-2-1.html)  
 本版本是个人在开发中结合自身使用习惯优化后的版本。
 
 ## ProtoThread机制
