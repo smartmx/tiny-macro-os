@@ -67,8 +67,9 @@ enum
 
 ### 无参数任务
 
+void参数表示函数无参数，可以不写该void，但是定义不标准，所以写上void最好
+
 ```c
-/*void参数表示函数无参数，可以不写该void，但是定义不标准，所以写上void最好 */
 OS_TASK(OS_TASK_TEST1, void)
 {
     OS_TASK_START(OS_TASK_TEST1);
@@ -83,6 +84,8 @@ OS_TASK(OS_TASK_TEST1, void)
 ```
 
 ### 带参数任务
+
+采用了可变宏定义，所以带参数任务编写格式函数参数直接作为宏定义中的成员写进去即可，数量不限
 
 ```c
 OS_TASK(OS_TASK_TEST2, unsigned char params)
