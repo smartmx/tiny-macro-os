@@ -18,93 +18,130 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- * 
+ *
  * This file is part of the tiny-macro-os Library.
- * 
+ *
  */
 #ifndef _TINY_MACRO_OS_H_
 #define _TINY_MACRO_OS_H_
 
-/****TINY_MACRO_OS CONFIG*********************************************************************************/
-#define TINY_MACRO_OS_TASKS_NUM           3U                //¶¨ÒåÊ¹ÓÃµÄÖ÷ÈÎÎñÊıÁ¿£¬×î´ó255¸öÈÎÎñ
-#define TINY_MACRO_OS_TIME_t              unsigned short    //¶¨ÒåÊ±¼ä¼ÆÊı±äÁ¿µÄÀàĞÍ£¬¸ù¾İ×î³¤ÑÓ³ÙĞŞ¸Ä
-#define TINY_MACRO_OS_LINE_t              unsigned short    //¶¨ÒåÈÎÎñÇĞ»»¼ÇÂ¼±äÁ¿µÄÀàĞÍ£¬¸ù¾İ×î´óº¯ÊıÕ¼ÓÃĞĞÊıĞŞ¸Ä
-#define os_SEM_t                          signed short      //ĞÅºÅÁ¿ÀàĞÍÉùÃ÷£¬±ØĞëÎªsignedÀàĞÍ
-#define os_SEC_TICKS                      1000              //¶¨Ê±Æ÷Ê±ÖÓ¸üĞÂÆµÂÊ£¬Ã¿ÃëÖÓ¶àÉÙ¸öticks
+/****TINY_MACRO_OS TASKS DECLARE**************************************************************************/
+/* å°†tiny macro osä»»åŠ¡å‡½æ•°çš„è¯†åˆ«åå­—æ”¾åˆ°è¿™é‡Œï¼Œåç»­ä½¿ç”¨éƒ½æ˜¯ä»è¿™é‡Œä½¿ç”¨ã€‚è‡ªå·±æ¯æ¬¡åˆ›å»ºä»»åŠ¡éƒ½éœ€è¦åœ¨è¿™é‡Œæ·»åŠ  */
+enum
+{
+    OS_TASK_TEST1 = 0,              /* æ›¿æ¢æˆè‡ªå·±çš„ä»»åŠ¡å‡½æ•°è¯†åˆ«æ–‡å­—ï¼Œå¦‚ä½¿ç”¨OS_TASK_DEFAULTï¼Œåˆ™ä»»åŠ¡å‡½æ•°åä¸ºOS_TASK_DEFAULT_task */
+    OS_TASK_TEST2,
+    TINY_MACRO_OS_TASKS_MAX_NUM,    /* å®šä¹‰ä½¿ç”¨çš„ä¸»ä»»åŠ¡æ•°é‡ï¼Œæœ€å¤§255ä¸ªä»»åŠ¡ */
+};
 
-/****TINY_MACRO_OS µ÷¶ÈÏµÍ³¿ªÊ¼*********************************************************************************/
+/****TINY_MACRO_OS CONFIG*********************************************************************************/
+
+#define TINY_MACRO_OS_TIME_t                        unsigned short    /* å®šä¹‰æ—¶é—´è®¡æ•°å˜é‡çš„ç±»å‹ï¼Œæ ¹æ®æœ€é•¿å»¶è¿Ÿä¿®æ”¹ */
+#define TINY_MACRO_OS_LINE_t                        unsigned short    /* å®šä¹‰ä»»åŠ¡åˆ‡æ¢è®°å½•å˜é‡çš„ç±»å‹ï¼Œæ ¹æ®æœ€å¤§å‡½æ•°å ç”¨è¡Œæ•°ä¿®æ”¹ */
+#define OS_SEM_t                                    signed short      /* ä¿¡å·é‡ç±»å‹å£°æ˜ï¼Œå¿…é¡»ä¸ºsignedç±»å‹ */
+#define OS_SEC_TICKS                                1000              /* å®šæ—¶å™¨æ—¶é’Ÿæ›´æ–°é¢‘ç‡ï¼Œæ¯ç§’é’Ÿå¤šå°‘ä¸ªticks */
+
+/* æœ€å¤§æ”¯æŒ32ä½MCUï¼Œå¯ä»¥æ”¯æŒ64ä½ä»¥ä¸Šï¼Œå°†ä¸‹é¢ä¿®æ”¹å³å¯uint8_t->255ï¼Œuint16_t->65535ï¼Œuint32_t->4294967295 */
+#define TINY_MACRO_OS_TIME_MAX                      (TINY_MACRO_OS_TIME_t)(0xffffffff) /* æœ€å¤§æ—¶é—´è®¡æ•°å€¼ */
+
+#define TINY_MACRO_OS_LINE_MAX                      (TINY_MACRO_OS_LINE_t)(0xffffffff) /* æœ€å¤§å‡½æ•°è¡Œæ•°è®¡æ•°å€¼ */
+
+
+/****TINY_MACRO_OS FUNCTIONS*********************************************************************************/
 /*
- *  µ÷¶ÈÆ÷Í¨¹ıÊ¹ÓÃos_task_startºÍos_task_endµÄÈÎÎñº¯ÊıÖĞ²»¿ÉÒÔÊ¹ÓÃswitch case£¬µ«ÊÇ¿ÉÒÔÍ¨¹ıµ÷ÓÃº¯Êı£¬ÔÚÁíÒ»¸ö·ÇÈÎÎñº¯ÊıÖĞÊ¹ÓÃswitch case¡£
- *  Ò»¶¨×¢Òâ£¬ÏÂÃæosµÄºê¶¨Òå²»ÄÜÓĞÈÎºÎµÄ»»ĞĞĞŞ¸Ä£¬±ØĞëÊÇÒ»ÕûĞĞ£¡£¡£¡£¡£¡£¡
+ *  è°ƒåº¦å™¨é€šè¿‡ä½¿ç”¨os_task_startå’Œos_task_endçš„ä»»åŠ¡å‡½æ•°ä¸­ä¸å¯ä»¥ä½¿ç”¨switch caseï¼Œä½†æ˜¯å¯ä»¥é€šè¿‡è°ƒç”¨å‡½æ•°ï¼Œåœ¨å¦ä¸€ä¸ªéä»»åŠ¡å‡½æ•°ä¸­ä½¿ç”¨switch caseã€‚
+ *  ä¸€å®šæ³¨æ„ï¼Œä¸‹é¢osçš„å®å®šä¹‰ä¸èƒ½æœ‰ä»»ä½•çš„æ¢è¡Œä¿®æ”¹ï¼Œå¿…é¡»æ˜¯ä¸€æ•´è¡Œï¼ï¼ï¼ï¼ï¼ï¼
  */
 
-extern volatile TINY_MACRO_OS_TIME_t os_task_timers[TINY_MACRO_OS_TASKS_NUM];      //ËùÓĞÈÎÎñµÄÊ±¼ä±äÁ¿Öµ¡£
+/* æ‰€æœ‰ä»»åŠ¡çš„æ—¶é—´å˜é‡å€¼ã€‚*/
+extern volatile TINY_MACRO_OS_TIME_t                os_task_timers[TINY_MACRO_OS_TASKS_MAX_NUM];
 
-//Èç¹û±àÒëÆ÷²»ÄÜÕıÈ·µÄ·µ»Ø×î´óÖµ£¬Ó¦¸Ã½«¸ÃºêÊÖ¶¯ĞŞ¸Ä£¬uint8_t->255£¬uint16_t->65535£¬uint32_t->4294967295
-#define TINY_MACRO_OS_TIME_MAX            (TINY_MACRO_OS_TIME_t)(-1) //×î´óÊ±¼ä¼ÆÊıÖµ
+/* æ‰€æœ‰ä»»åŠ¡çš„å‡½æ•°è¿è¡Œæ ‡è®°å€¼ã€‚*/
+extern volatile TINY_MACRO_OS_LINE_t                os_task_linenums[TINY_MACRO_OS_TASKS_MAX_NUM];
 
-#define TINY_MACRO_OS_LINE_MAX            (TINY_MACRO_OS_LINE_t)(-1) //×î´óº¯ÊıĞĞÊı¼ÆÊıÖµ
+/* ä»»åŠ¡å‡½æ•°å£°æ˜ */
+#define OS_TASK(NAME, ...)                          TINY_MACRO_OS_TIME_t (NAME##_task)(__VA_ARGS__)
 
-#define os_task         TINY_MACRO_OS_TIME_t                              //ËùÓĞÈÎÎñÓÃÆä¶¨Òå
+/* è¿è¡Œè°ƒç”¨ä»»åŠ¡å‡½æ•°ï¼Œåº”å½“åœ¨ä¸»ç¨‹åºçš„while(1)é‡Œä½¿ç”¨ */
+#define OS_RUN_TASK(NAME, ...)                      do{if(os_task_timers[(NAME)]==0U){os_task_timers[NAME]=(NAME##_task)(__VA_ARGS__);}}while(0)
 
-#define os_task_boot()      static TINY_MACRO_OS_LINE_t os_task_lc=0U; //ÈÎÎñº¯Êı³õÊ¼»¯£¬ÔÚos_task_bootºÍos_task_startÖ®¼ä¿ÉÒÔÍ¨¹ı´ø²ÎÊıÔËĞĞº¯Êı£¬½øĞĞÈÎÎñ¸´Î»µÈ²Ù×÷
+/* High Priorityé«˜ä¼˜å…ˆçº§è¿è¡Œä»»åŠ¡ã€‚è¯¥ä»»åŠ¡è¿”å›çš„æ—¶é—´å€¼ä¸èƒ½ä¸€ç›´ä¸º0ï¼Œå¿…é¡»æœ‰ç­‰å¾…æ—¶é—´è®©å‡ºä½¿ç”¨æƒï¼Œä¸ç„¶ä¸‹é¢çš„å…¶ä»–ä»»åŠ¡å°†æ— æ³•ç»§ç»­è¿è¡Œã€‚*/
+#define OS_RUN_HPTASK(NAME, ...)                    {if(os_task_timers[(NAME)]==0U){os_task_timers[(NAME)]=(NAME##_task)(__VA_ARGS__);continue;}}
 
-#define os_task_start()        switch(os_task_lc){case 0U:       //ËùÓĞÈÎÎñ¿ªÊ¼Ö®Ç°
+/* è¿è¡Œä»»åŠ¡ï¼Œä¸ç®¡ä»»åŠ¡æ—¶é—´çŠ¶æ€ç«‹åˆ»è¿è¡Œã€‚ */
+#define OS_CALL_TASK(NAME, ...)                     do{os_task_timers[(NAME)]=(NAME##_task)(__VA_ARGS__);} while(0)
 
-#define os_task_end()          break; default:break;}  os_task_lc=0U;  return TINY_MACRO_OS_TIME_MAX     //ËùÓĞÈÎÎñ½áÊøÖ®Ç°
+/* å‡½æ•°ä»»åŠ¡ç³»ç»Ÿè°ƒåº¦å¼€å§‹å®šä¹‰ */
+#define OS_TASK_START(NAME)                         switch(os_task_linenums[(NAME)]){case 0U:
 
-#define os_task_Reset()        do{os_task_lc=0;}while(0); //ÈÎÎñ´ÓÍ·¿ªÊ¼Ö´ĞĞ
+/* å‡½æ•°ä»»åŠ¡ç³»ç»Ÿè°ƒåº¦ç»“æŸå®šä¹‰ */
+#define OS_TASK_END(NAME)                           break;default:break;}os_task_linenums[(NAME)]=0U;return TINY_MACRO_OS_TIME_MAX
 
-#define os_task_WaitX(ticks)   os_task_lc=(TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U;  if(os_task_lc){return (ticks);}  break; case ((TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX)+1U:  //µÈ´ıÊ±¼ä µ¥Î»Ê±¼äÎªÖĞ¶ÏÀï¶¨ÒåµÄÏµÍ³×îĞ¡Ê±¼ä
+/* è°ƒåº¦å¼€å§‹ä¹‹å‰ï¼Œåˆå§‹åŒ–æ‰€æœ‰ä»»åŠ¡ï¼Œæ¯ä¸ªä»»åŠ¡æ¥ä¸‹æ¥éƒ½ä¼šè¢«æ‰§è¡Œ */
+#define OS_INIT_TASKS()                             do{unsigned char i;for(i=0U;i<TINY_MACRO_OS_TASKS_MAX_NUM;i++){os_task_timers[i]=0U;os_task_linenums[i]=0U;}}while(0)
 
-#define os_task_CWaitX(ticks)    return ticks   //µÈ´ıÊ±¼ä£¬²»¸Ä±äÉÏÒ»´Îº¯ÊıÌø×ªÎ»ÖÃ
+/* æ›´æ–°ç³»ç»Ÿæ—¶é—´ï¼Œè¯¥å‡½æ•°åº”è¯¥æ”¾å…¥å®šæ—¶å™¨ä¸­æ–­å‡½æ•°ä¸­å¤„ç†ï¼Œæˆ–è€…è½¯ä»¶å®šæ—¶å™¨ä¸­ä¹Ÿå¯ */
+#define OS_UPDATE_TIMERS()                          do {unsigned char i;for(i=0U;i<TINY_MACRO_OS_TASKS_MAX_NUM;i++){if(os_task_timers[i]!=0U){if(os_task_timers[i]!=TINY_MACRO_OS_TIME_MAX){os_task_timers[i]--;}}}} while(0)
 
-#define os_task_Yield()      os_task_WaitX(0)      //Ìø³öµ±Ç°ÈÎÎñ
+/*********************************** ä»¥ä¸‹å‡½æ•°åªå¯ä»¥åœ¨è‡ªèº«çš„ä»»åŠ¡å‡½æ•°ä¸­è°ƒç”¨ *************************************/
+/* åœæ­¢å¹¶ä¸”å†ä¸è¿è¡Œè¿è¡Œå½“å‰ä»»åŠ¡ï¼Œå¤ä½ä»»åŠ¡çŠ¶æ€ï¼Œä¸‹ä¸€æ¬¡è¿è¡Œä»å¤´å¼€å§‹ï¼Œåªå¯ä»¥åœ¨æœ¬ä»»åŠ¡ä¸­ä½¿ç”¨ã€‚ */
+#define OS_TASK_EXIT(NAME)                          do{os_task_linenums[(NAME)]=0U;}while(0);return TINY_MACRO_OS_TIME_MAX
 
-#define os_task_Exit()        do{os_task_lc=0U;}while(0); return TINY_MACRO_OS_TIME_MAX     //Í£Ö¹²¢ÇÒÔÙ²»ÔËĞĞÔËĞĞµ±Ç°ÈÎÎñ
+/* é€€å‡ºå½“å‰ä»»åŠ¡ï¼Œå¹¶ç­‰å¾…å¯¹åº”æ—¶é—´ï¼Œä¿å­˜å½“å‰è¿è¡Œä½ç½®ï¼Œæ—¶é—´å•ä½ä¸ºä¸­æ–­é‡Œå®šä¹‰çš„ç³»ç»Ÿæœ€å°æ—¶é—´ã€‚ */
+#define OS_TASK_WAITX(NAME, TICKS)                  os_task_linenums[(NAME)]=(TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U;if(os_task_linenums[(NAME)]){return(TICKS);}break;case ((TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX)+1U:
 
-#define os_task_Suspend()      os_task_WaitX(TINY_MACRO_OS_TIME_MAX)       //¹ÒÆğµ±Ç°ÈÎÎñ
+/* è·³å‡ºå½“å‰ä»»åŠ¡ï¼Œä¿å­˜å½“å‰è¿è¡Œä½ç½® */
+#define OS_TASK_YIELD(NAME)                         OS_TASK_WAITX(NAME, 0)
 
-#define os_task_Suspend_Another(TaskName,TaskID)        do{os_task_timers[(TaskID)]=TINY_MACRO_OS_TIME_MAX;}while(0);     //¹ÒÆğÁíÒ»¸öÖ¸¶¨ÈÎÎñ£¬²»¿ÉÓÃÓÚ×ÔÉí
+/* ç­‰å¾…æ—¶é—´ï¼Œä¸æ”¹å˜ä¸Šä¸€æ¬¡å‡½æ•°è·³è½¬ä½ç½® */
+#define OS_TASK_CWAITX(TICKS)                       return (TICKS)
 
-#define os_task_Restart_Now(TaskName,TaskID)    do {if(os_task_timers[(TaskID)]==TINY_MACRO_OS_TIME_MAX){os_task_timers[(TaskID)]=(TaskName)();} } while(0)     //ÖØĞÂÆô¶¯Ò»¸öÒÑ¾­Í£Ö¹ÔËĞĞµÄÈÎÎñ£¬Á¢¿ÌÔËĞĞÈÎÎñ
+/* æŒ‚èµ·å½“å‰ä»»åŠ¡ */
+#define OS_TASK_SUSPEND(NAME)                       OS_TASK_WAITX(NAME, TINY_MACRO_OS_TIME_MAX)
 
-#define os_task_Restart_Later(TaskName,TaskID,ticks) do {if(os_task_timers[(TaskID)]==TINY_MACRO_OS_TIME_MAX){os_task_timers[(TaskID)]=ticks;}} while(0) //ÔÚÖ¸¶¨Ê±¼äºóÖØĞÂÆô¶¯ÈÎÎñ
+/* å¤ä½å½“å‰ä»»åŠ¡ï¼Œåœ¨æŒ‡å®šæ—¶é—´åå¼€å§‹ä¸‹ä¸€æ¬¡è¿è¡Œï¼Œå¹¶ä»å¤´å¼€å§‹ */
+#define OS_TASK_RESET(NAME, TICKS)                  do{os_task_linenums[(NAME)]=0;}while(0);return (TICKS)
 
-#define os_task_Restart(TaskName,TaskID)    os_task_Restart_Later(TaskName,TaskID,0)    //ÔÚÏÂÒ»´ÎÈÎÎñÂÖÑ¯Ê±Æô¶¯ÈÎÎñ
+/* ç­‰å¾…æ¡ä»¶ C æ»¡è¶³å†ç»§ç»­å‘ä¸‹æ‰§è¡Œï¼ŒæŸ¥è¯¢é¢‘ç‡ä¸ºæ¯ticksä¸ªæ—¶é’Ÿä¸€æ¬¡ */
+#define OS_TASK_WAIT_UNTIL(NAME, C, TICKS)          do{OS_TASK_WAITX(NAME, TICKS); if(!(C)) return (TICKS);} while(0)
 
-#define os_task_Ticks_Update(TaskName,TaskID,ticks) do {os_task_timers[(TaskID)]=ticks;} while(0)   //¸üĞÂÈÎÎñÊ±¼ä£¬ÒÔ±ãÍ»·¢ÊÂ¼şÔËĞĞÈÎÎñ
+/* ç­‰å¾…æ¡ä»¶ C æ»¡è¶³å†ç»§ç»­å‘ä¸‹æ‰§è¡Œï¼ŒæŸ¥è¯¢é¢‘ç‡ä¸ºæ¯ticksä¸ªæ—¶é’Ÿä¸€æ¬¡ï¼Œå¸¦æœ‰è¶…æ—¶æ¬¡æ•°ï¼Œé»˜è®¤è¶…æ—¶æ¬¡æ•°æœ€å¤§255ï¼Œå¯ä»¥é€šè¿‡æ›´æ”¹ä¸‹æ–¹_overtimesçš„å®šä¹‰æ”¹ä¸ºunsigned shortç­‰å¢å¤§æ¬¡æ•° */
+#define OS_TASK_WAIT_UNTILX(NAME, C, TICKS, TIMES)  do{static unsigned char _overtimes;_overtimes=(TIMES);OS_TASK_WAITX(NAME, TICKS);if(!(C)&&(_overtimes>0)){_overtimes--;return (TICKS);}} while(0)
 
-#define os_task_WaitUntil(C,ticks) do{ os_task_WaitX(ticks); if(!(C)) return ticks;} while(0) //µÈ´ıÌõ¼ş C Âú×ãÔÙ¼ÌĞøÏòÏÂÖ´ĞĞ£¬²éÑ¯ÆµÂÊÎªÃ¿ticks¸öÊ±ÖÓÒ»´Î
+/*************************************ä»¥ä¸‹å‡½æ•°åªå¯ä»¥åœ¨å…¶ä»–ä»»åŠ¡å‡½æ•°ä¸­è°ƒç”¨ï¼Œä¸å¯ä»¥åœ¨è‡ªèº«å‡½æ•°ä¸­è°ƒç”¨*******************************/
+/* æŒ‚èµ·å¦ä¸€ä¸ªæŒ‡å®šä»»åŠ¡ï¼Œä¸å¯æŒ‚èµ·è‡ªèº« */
+#define OS_TASK_SUSPEND_ANOTHER(NAME)               do{os_task_timers[(NAME)]=TINY_MACRO_OS_TIME_MAX;}while(0)
 
-#define os_RunTask(TaskName,TaskID)  do {if (os_task_timers[(TaskID)]==0U){os_task_timers[(TaskID)]=(TaskName)(); } } while(0)   //ÔËĞĞÈÎÎñ£¬ÔÚÖ÷³ÌĞòµÄwhile£¨1£©Àïµ÷ÓÃ
+/* å¤ä½å¦ä¸€ä¸ªä»»åŠ¡ï¼Œåœ¨ä¸‹æ¬¡è¿è¡Œæ—¶ä»å¤´å¼€å§‹ï¼Œå¯ä»¥å’ŒOS_CALL_TASKé…åˆä½¿ç”¨æ¥ç«‹åˆ»é‡æ–°å¼€å§‹è¿è¡Œä¸€ä¸ªä»»åŠ¡ */
+#define OS_TASK_RESET_ANOTHER(NAME)                 do{os_task_linenums[(NAME)]=0;}while(0)
 
-#define os_RunHpTask(TaskName,TaskID) { if (os_task_timers[(TaskID)]==0U) {os_task_timers[(TaskID)]=(TaskName)(); continue;} }    //High Priority¸ßÓÅÏÈ¼¶ÔËĞĞÈÎÎñ£¬Ö»´øÒ»¸ö²ÎÊı£¬ÎªÁË¼æÈİ51µ¥Æ¬»ú£¬²»Ê¹ÓÃ¿É±ä²ÎÊı¡£¸ÃÈÎÎñ·µ»ØµÄÊ±¼äÖµ²»ÄÜÒ»Ö±Îª0£¬±ØĞëÓĞµÈ´ıÊ±¼äÈÃ³öÊ¹ÓÃÈ¨£¬²»È»ÏÂÃæµÄÆäËûÈÎÎñ½«ÎŞ·¨¼ÌĞøÔËĞĞ¡£
+/* åœ¨æŒ‡å®šæ—¶é—´åé‡æ–°å¯åŠ¨å¦ä¸€ä¸ªå·²ç»åœæ­¢è¿è¡Œçš„ä»»åŠ¡*/
+#define OS_TASK_RESTART_ANOTHER(NAME, TICKS)        do{if(os_task_timers[(NAME)]==TINY_MACRO_OS_TIME_MAX){os_task_timers[(NAME)]=(TICKS);}}while(0)
 
-#define os_RunTaskWithParam(TaskName,TaskID,param)  do {if (os_task_timers[(TaskID)]==0U){os_task_timers[(TaskID)]=(TaskName)(param); } } while(0)   //´ø²ÎÊıÔËĞĞÈÎÎñ£¬ÔÚÖ÷³ÌĞòµÄwhile£¨1£©Àïµ÷ÓÃ
+/* æ›´æ–°å¦ä¸€ä¸ªä»»åŠ¡çš„æ—¶é—´ï¼Œä»¥ä¾¿çªå‘äº‹ä»¶è¿è¡Œä»»åŠ¡ */
+#define OS_TASK_UPDATE_ANOTHER(NAME, TICKS)         do {os_task_timers[(NAME)]=(TICKS);}while(0)
 
-#define os_RunHpTaskWithParam(TaskName,TaskID,param) { if (os_task_timers[(TaskID)]==0U) {os_task_timers[(TaskID)]=(TaskName)(param); continue;} }    //High Priority¸ßÓÅÏÈ¼¶ÔËĞĞÈÎÎñ£¬´øÒ»¸ö²ÎÊı
+/*************************************ä¿¡å·é‡*******************************************/
+/* ç­‰å¾…ä¿¡å·é‡è¶…æ—¶ */
+#define OS_SEM_TIMEOUT                              (-1)
 
-#define os_CallTask(TaskName,TaskID) do {os_task_timers[(TaskID)]=(TaskName)();} while(0) //ÔËĞĞÈÎÎñ£¬²»¹ÜÈÎÎñÊ±¼ä×´Ì¬Á¢¿ÌÔËĞĞ¡£
+/* åˆå§‹åŒ–ä¿¡å·é‡ */
+#define OS_INIT_SEM(SEM)                            (SEM)=0;
 
-#define os_CallTaskWithParam(TaskName,TaskID,param)  do {os_task_timers[(TaskID)]=(TaskName)(param);} while(0)   //´ø²ÎÊıÔËĞĞÈÎÎñ£¬²»¹ÜÈÎÎñÊ±¼ä×´Ì¬Á¢¿ÌÔËĞĞ¡£
+/* ç­‰å¾…ä¿¡å·é‡ï¼ŒæŸ¥è¯¢é¢‘ç‡ä¸ºæ¯ticksä¸ªæ—¶é’Ÿä¸€æ¬¡ */
+#define OS_WAIT_SEM(NAME, SEM, TICKS)               do{(SEM)=1;OS_TASK_WAITX(NAME, TICKS);if((SEM)>0)return (TICKS);}while(0)
 
-#define os_CallSub(SubTaskName) do { os_task_lc=(TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U; if(os_task_lc) {return 0U;} break; case (TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U:{ TINY_MACRO_OS_TIME_t subtasktime; subtasktime=(SubTaskName)(); if(subtasktime!=TINY_MACRO_OS_TIME_MAX) {return subtasktime;}}} while(0) //ÔÚÈÎÎñÖĞµ÷ÓÃµÄ×ÓÈÎÎñ£¬ÔÚ×ÓÈÎÎñ½áÊøÖ®Ç°²»»á¼ÌĞøÖ÷ÈÎÎñ£¬¼´×ÓÈÎÎñÕ¼ÓÃÁËÖ÷ÈÎÎñµÄÏµÍ³Ê±¼ä±äÁ¿Ê¹ÓÃÈ¨
+/* ç­‰å¾…ä¿¡å·é‡ï¼Œå¹¶æœ‰è¶…æ—¶æ¬¡æ•°ï¼ŒæŸ¥è¯¢é¢‘ç‡ä¸ºæ¯ticksä¸ªæ—¶é’Ÿä¸€æ¬¡ï¼Œè¶…æ—¶æ—¶é—´ä¸ºticks*TIMESï¼Œæ‰€ä»¥ticksæœ€å¥½ä¸è¦ä¸º0 */
+#define OS_WAIT_SEMX(NAME, SEM, TICKS, TIMES)       do{(SEM)=(TIMES)+1;OS_TASK_WAITX(NAME, TICKS); if((SEM)>1){(SEM)--;return (TICKS);}else if((SEM)!=0){(SEM)=OS_SEM_TIMEOUT;}}while(0)
 
-#define os_CallSubWithParam(SubTaskName, param) do { os_task_lc=(TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U; if(os_task_lc) {return 0U;} break; case (TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U: {TINY_MACRO_OS_TIME_t subtasktime; subtasktime=(SubTaskName)(param); if(subtasktime!=TINY_MACRO_OS_TIME_MAX) {return subtasktime;}}} while(0) //ÔÚÈÎÎñÖĞµ÷ÓÃµÄ×ÓÈÎÎñ£¨´ø²ÎÊı£©
+/* å‘é€ä¿¡å·é‡ */
+#define OS_SEND_SEM(SEM)                            do {(SEM)=0;} while(0)
 
-#define os_InitTasks() do {unsigned char i; for(i=0U;i<TINY_MACRO_OS_TASKS_NUM ;i++) {os_task_timers[i]=0U;} } while(0) //³õÊ¼»¯ÈÎÎñ£¬Ã¿¸öÈÎÎñ½ÓÏÂÀ´¶¼»á±»Ö´ĞĞ
+/*************************************å­ä»»åŠ¡*******************************************/
+/* åœ¨ä»»åŠ¡ä¸­è°ƒç”¨çš„å­ä»»åŠ¡ï¼Œä¼šå…ˆé€€å‡ºä¸»ä»»åŠ¡ï¼Œåœ¨ä¸‹ä¸€æ¬¡æ‰§è¡Œä¸»ä»»åŠ¡æ—¶ï¼Œç›´æ¥æ‰§è¡Œå­ä»»åŠ¡ã€‚åœ¨å­ä»»åŠ¡ç»“æŸä¹‹å‰ä¸ä¼šç»§ç»­ä¸»ä»»åŠ¡ï¼Œå³å­ä»»åŠ¡å ç”¨äº†ä¸»ä»»åŠ¡çš„ç³»ç»Ÿæ—¶é—´å˜é‡ä½¿ç”¨æƒã€‚ */
+#define OS_CALL_SUB(NAME, SUBNAME, ...)             do {os_task_linenums[(NAME)]=(TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U; if(os_task_linenums[(NAME)]) {return 0U;} break; case (TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U:{os_task_timers[(NAME)]=(SUBNAME##_task)(__VA_ARGS__); if(os_task_timers[(NAME)]!=TINY_MACRO_OS_TIME_MAX) {return os_task_timers[(NAME)];}}} while(0)
 
-#define os_UpdateTimers() do {unsigned char i; for(i=0U;i<TINY_MACRO_OS_TASKS_NUM ;i++){  if(os_task_timers[i]!=0U){  if(os_task_timers[i]!=TINY_MACRO_OS_TIME_MAX) { os_task_timers[i]--;}}}} while(0) //¸üĞÂÏµÍ³Ê±¼ä£¬¸Ãº¯ÊıÓ¦¸Ã·ÅÈë¶¨Ê±Æ÷ÖĞ¶ÏÖĞ´¦Àí
-
-#define os_TIMEOUT      (-1) //³¬Ê±
-
-#define os_InitSem(sem) (sem)=0;  //³õÊ¼»¯ĞÅºÅÁ¿
-
-#define os_WaitSem(sem,ticks) do{ (sem)=1; os_task_WaitX(ticks); if ((sem)>0) return ticks;} while(0) //µÈ´ıĞÅºÅÁ¿£¬²éÑ¯ÆµÂÊÎªÃ¿ticks¸öÊ±ÖÓÒ»´Î
-
-#define os_WaitSemX(sem,overtimes,ticks)  do { (sem)=(overtimes)+1; os_task_WaitX(ticks); if((sem)>1){ (sem)--;  return ticks;} else{(sem)=os_TIMEOUT;} } while(0)  //µÈ´ıĞÅºÅÁ¿£¬²¢ÓĞ³¬Ê±´ÎÊı£¬²éÑ¯ÆµÂÊÎªÃ¿ticks¸öÊ±ÖÓÒ»´Î£¬³¬Ê±Ê±¼äÎªticks*overtimes£¬ËùÒÔticks×îºÃ²»ÒªÎª0
-
-#define os_SendSem(sem)  do {(sem)=0;} while(0) //·¢ËÍĞÅºÅÁ¿
+/* åœ¨ä»»åŠ¡ä¸­è°ƒç”¨çš„å­ä»»åŠ¡å¹¶å¸¦æœ‰è¶…æ—¶æ—¶é—´ï¼Œåœ¨å­ä»»åŠ¡ç»“æŸä¹‹å‰ä¸ä¼šç»§ç»­ä¸»ä»»åŠ¡ï¼Œå³å­ä»»åŠ¡å ç”¨äº†ä¸»ä»»åŠ¡çš„ç³»ç»Ÿæ—¶é—´å˜é‡ä½¿ç”¨æƒï¼Œå­ä»»åŠ¡çš„æ—¶é—´å˜é‡ä¸ºå­ä»»åŠ¡æœ€å¤§è¿è¡Œæ—¶é—´ï¼Œå³ä½¿å­ä»»åŠ¡æ²¡æœ‰ç»“æŸï¼Œè¾¾åˆ°è¶…æ—¶æ—¶é—´ä¹Ÿä¼šé€€å‡ºï¼Œä½†æ˜¯ä¸ºæœ€å¤§æ—¶é—´å€¼æ—¶ä¸ä¼šé€€å‡ºï¼Œå’ŒOS_CALL_SUBæ•ˆæœä¸€è‡´ã€‚ */
+#define OS_CALL_SUBX(NAME, TICKS, SUBNAME, ...)     do {os_task_timers[(SUBNAME)]=TICKS;os_task_linenums[(NAME)]=(TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U;if(os_task_linenums[(NAME)]){return 0U;} break; case (TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U:if(os_task_timers[(SUBNAME)]>0){os_task_timers[(NAME)]=(SUBNAME##_task)(__VA_ARGS__);if(os_task_timers[(NAME)]!=TINY_MACRO_OS_TIME_MAX) {return os_task_timers[(NAME)];}}} while(0)
 
 #endif /* _TINY_MACRO_OS_H_ */

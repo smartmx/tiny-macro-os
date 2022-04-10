@@ -18,132 +18,225 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- * 
+ *
  * This file is part of the tiny-macro-os Library.
- * 
+ *
  */
 #include "tiny-macro-os.h"
 
-volatile TINY_MACRO_OS_TIME_t os_task_timers[TINY_MACRO_OS_TASKS_NUM];      //ËùÓĞÈÎÎñµÄÊ±¼ä±äÁ¿Öµ¡£
+/* æ‰€æœ‰ä»»åŠ¡çš„æ—¶é—´å˜é‡å€¼ã€‚*/
+volatile TINY_MACRO_OS_TIME_t os_task_timers[TINY_MACRO_OS_TASKS_MAX_NUM];
+
+/* æ‰€æœ‰ä»»åŠ¡çš„å‡½æ•°è¿è¡Œæ ‡è®°å€¼ã€‚*/
+volatile TINY_MACRO_OS_LINE_t os_task_linenums[TINY_MACRO_OS_TASKS_MAX_NUM];
 
 /*
- * ¸Ãµ÷¶ÈÆ÷Ë¼Ïë½è¼øÁËprotothread£¬Í¨¹ı¾«¼òÕûÀíºóĞÎ³É¸Ãos£¬ÆäÊµ¿ÉÒÔËã×÷ÁíÀàµÄ×´Ì¬»ú¡£
- * ²Î¿¼ÁË°¢ÄªÂÛÌ³https://www.amobbs.com/thread-5508720-2-1.htmlÖĞµÄsmsetÌá³öµÄĞ¡Ğ¡µ÷¶ÈÆ÷¡£
- * Ä¿µÄÖ»Îª¼«¶È¾«¼ò£¬²¢ÇÒ¿ÉÎª51ËùÓÃ£¬ËùÒÔ²»²ÉÓÃÁ´±í¹ÜÀíÈÎÎñ£¬È«¿¿ÊÖ¶¯¡£
- */
-/*
- * ÆÕÍ¨ÈÎÎñ±àĞ´¸ñÊ½
-os_task os_task_test1(void){
-  os_task_boot();
-  os_task_start();
-  static uint8_t i = 0;//ÈÎÎñÖĞ¶¨ÒåµÄ»áÔÚÈÎÎñÇĞ»»Ç°ºó¶¼Ê¹ÓÃµÄ¾Ö²¿±äÁ¿ĞèÒªÊ¹ÓÃstatic¶¨Òå£¬²»È»±äÁ¿»á¶ªÊ§
-  //½ûÖ¹ÔÚos_task_startºÍos_task_endÖĞÊ¹ÓÃswitchºÍreturn;
-  while(1){
-    printf("os test1\n");
-    os_task_WaitX(1000);
-  }
-  os_task_end();
-}
-*/
-
-/*
- * ´ø²ÎÊıÈÎÎñ±àĞ´¸ñÊ½
-os_task os_task_test2(uint8_t params){
-  os_task_boot();
-  //os_task_bootµ½os_task_startÖ®¼äµÄ´úÂë£¬Ã¿´ÎÖ´ĞĞÈÎÎñ¶¼»áÔËĞĞ£¬¿ÉÒÔÔÚ´ËÔö¼ÓÈÎÎñ¸´Î»µÈ¹¦ÄÜÍË³öÏÂÃæÕıÔÚµÈ´ıÖĞµÄĞ¡ÈÎÎñ
-  if(params){
-      os_task_Reset();
-  }
-  os_task_start();
-  //½ûÖ¹Ê¹ÓÃswitch
-  while(1){
-    printf("os test2:%d\n",params);
-    os_task_WaitX(600);
-  }
-  os_task_end();
-}
-*/
-
-
-/*
- * ËùÓĞµÄÖ÷ÈÎÎñ¶¼ĞèÒªÊÖ¶¯ÔÚmainº¯ÊıµÄwhile(1)ÖĞµ÷ÓÃ
-void main()
-{
-  os_InitTasks();
-  while(1){
-    os_RunTask(os_task_test1,0);
-    os_RunTaskWithParam(os_task_test2,1,1);
-//    os_RunHpTask(os_task_test1,0);
-//    os_RunHpTaskWithParam(os_task_test2,1,1);
-  }
-}
-*/
-
-/*
- * ÔÚ¶¨Ê±Æ÷ÖĞ¶ÏÖĞ¸üĞÂÏµÍ³ÈÎÎñÊ±ÖÓtimer
+ * å¿…é¡»è¦åœ¨å®šæ—¶å™¨å‡½æ•°ä¸­æ›´æ–°ç³»ç»Ÿä»»åŠ¡æ—¶é’Ÿtimerï¼Œæä¾›å¿ƒè·³
 void SysTick_Handler(void)
 {
-  os_UpdateTimers();
+    OS_UPDATE_TIMERS();
 }
 */
 
-/*
- * ĞÅºÅÁ¿Àı×Ó
-os_SEM_t test;
+#if 0 /*æ™®é€šä»»åŠ¡ä¾‹å­ */
 
-os_task os_sem_test(void){
-  os_task_boot();
-  os_task_start();
-  os_InitSem(test);
-  //½ûÖ¹Ê¹ÓÃswitch
-  while(1){
-    os_WaitSem(test,0);
-    printf("uart rec\n");
-    os_WaitSemX(test,10,1);//µÚÈı¸ö²ÎÊı×îºÃ²»ÒªÎª0£¬²»È»ÎŞ·¨¼ÆËãÊ±¼ä£¬±ä³É¿´Õâ¸öÈÎÎñÔËĞĞ¼¸´ÎÁË¡£
-    if(test == os_TIMEOUT){
-      printf("uart timeout\n");
-    } else {
-      printf("uart rec\n");
-    }
-  }
-  os_task_end();
-}
-
-void UART0_IRQHandler()
+/*voidå‚æ•°è¡¨ç¤ºå‡½æ•°æ— å‚æ•°ï¼Œå¯ä»¥ä¸å†™è¯¥voidï¼Œä½†æ˜¯å®šä¹‰ä¸æ ‡å‡†ï¼Œæ‰€ä»¥å†™ä¸Švoidæœ€å¥½ */
+OS_TASK(OS_TASK_TEST1, void)
 {
-  if(RX){
-    os_SendSem(test);
-  }
-}
-*/
-
-/*
- * os_CallSub×ÓÈÎÎñÔËĞĞÀı×Ó
-os_task os_child_task(void){
-  os_task_boot();
-  os_task_start();
-  //½ûÖ¹Ê¹ÓÃswitch
-  os_task_WaitX(500);
-  printf("os_child_task 1\n");
-  os_task_WaitX(500);
-  printf("os_child_task 2\n");
-  os_task_WaitX(500);
-  printf("os_child_task 3\n");
-  os_task_WaitX(500);
-  os_task_end();
+    OS_TASK_START(OS_TASK_TEST1);
+    /* ç¦æ­¢åœ¨OS_TASK_STARTå’ŒOS_TASK_ENDä¹‹é—´ä½¿ç”¨switch */
+    while (1)
+    {
+        printf("OS_TASK_TEST1\n");
+        OS_TASK_WAITX(OS_TASK_TEST1, OS_SEC_TICKS * 6 / 10);
+    }
+    OS_TASK_END(OS_TASK_TEST1);
 }
 
-os_task os_father_task(void){
-  os_task_boot();
-  os_task_start();
-  //½ûÖ¹Ê¹ÓÃswitch
-  while(1){
-    printf("os_father_task\n");
-    os_CallSub(os_child_task);
-  }
-  os_task_end();
+/* å¸¦å‚æ•°ä»»åŠ¡ç¼–å†™æ ¼å¼å‡½æ•°å‚æ•°ç›´æ¥ä½œä¸ºå®å®šä¹‰ä¸­çš„æˆå‘˜å†™è¿›å»å³å¯ */
+OS_TASK(OS_TASK_TEST2, unsigned char params)
+{
+    OS_TASK_START(OS_TASK_TEST2);
+    /* ç¦æ­¢åœ¨OS_TASK_STARTå’ŒOS_TASK_ENDä¹‹é—´ä½¿ç”¨switch */
+    while (1)
+    {
+        printf("OS_TASK_TEST2:%d\n", params);
+        OS_TASK_WAITX(OS_TASK_TEST2, OS_SEC_TICKS * 6 / 10);
+    }
+    OS_TASK_END(OS_TASK_TEST2);
 }
-*/
 
+void tmos_test_main(void)
+{
+    OS_INIT_TASKS();
+    unsigned char i = 0;
+    while (1)
+    {
+        /* æ‰€æœ‰çš„ä¸»ä»»åŠ¡éƒ½éœ€è¦æ‰‹åŠ¨åœ¨mainå‡½æ•°çš„while(1)ä¸­è°ƒç”¨ */
+        OS_RUN_TASK(OS_TASK_TEST1);
+        OS_RUN_TASK(OS_TASK_TEST2, i++);
+    }
+}
 
+#elif 0 /* OS_CALL_SUBå­ä»»åŠ¡è¿è¡Œä¾‹å­ï¼Œæ— è¶…æ—¶æ—¶é—´ */
+
+#if 0
+/* å­ä»»åŠ¡é€€å‡ºï¼ŒæŸ¥çœ‹æ•ˆæœ */
+OS_TASK(OS_TASK_TEST2)
+{
+    OS_TASK_START(OS_TASK_TEST2);
+    /* ç¦æ­¢åœ¨OS_TASK_STARTå’ŒOS_TASK_ENDä¹‹é—´ä½¿ç”¨switch */
+    printf("child task 1\n");
+    OS_TASK_WAITX(OS_TASK_TEST2, OS_SEC_TICKS * 3 / 10);
+    printf("child task 2\n");
+    OS_TASK_WAITX(OS_TASK_TEST2, OS_SEC_TICKS * 4 / 10);
+    printf("child task 3\n");
+    OS_TASK_WAITX(OS_TASK_TEST2, OS_SEC_TICKS * 5 / 10);
+    OS_TASK_END(OS_TASK_TEST2);
+}
+#else
+/* å­ä»»åŠ¡ä¸é€€å‡ºï¼ŒæŸ¥çœ‹æ•ˆæœ */
+OS_TASK(OS_TASK_TEST2)
+{
+    OS_TASK_START(OS_TASK_TEST2);
+    /* ç¦æ­¢åœ¨OS_TASK_STARTå’ŒOS_TASK_ENDä¹‹é—´ä½¿ç”¨switch */
+    while (1)
+    {
+        printf("child task 1\n");
+        OS_TASK_WAITX(OS_TASK_TEST2, OS_SEC_TICKS * 3 / 10);
+        printf("child task 2\n");
+        OS_TASK_WAITX(OS_TASK_TEST2, OS_SEC_TICKS * 4 / 10);
+        printf("child task 3\n");
+        OS_TASK_WAITX(OS_TASK_TEST2, OS_SEC_TICKS * 5 / 10);
+    }
+    OS_TASK_END(OS_TASK_TEST2);
+}
+#endif
+
+OS_TASK(OS_TASK_TEST1, void)
+{
+    OS_TASK_START(OS_TASK_TEST1);
+    /* ç¦æ­¢åœ¨OS_TASK_STARTå’ŒOS_TASK_ENDä¹‹é—´ä½¿ç”¨switch */
+    while (1)
+    {
+        printf("father task\n");
+        OS_TASK_WAITX(OS_TASK_TEST1, OS_SEC_TICKS * 2 / 10);
+        OS_CALL_SUB(OS_TASK_TEST1, OS_TASK_TEST2);
+    }
+    OS_TASK_END(OS_TASK_TEST1);
+}
+
+void tmos_test_main(void)
+{
+    OS_INIT_TASKS();
+    unsigned char i = 0;
+    while (1)
+    {
+        /* æ‰€æœ‰çš„ä¸»ä»»åŠ¡éƒ½éœ€è¦æ‰‹åŠ¨åœ¨mainå‡½æ•°çš„while(1)ä¸­è°ƒç”¨ */
+        OS_RUN_TASK(OS_TASK_TEST1);
+    }
+}
+
+#elif 0 /* OS_CALL_SUBå­ä»»åŠ¡è¿è¡Œä¾‹å­ï¼Œæœ‰è¶…æ—¶æ—¶é—´ */
+
+/* å­ä»»åŠ¡ä¸é€€å‡ºï¼ŒæŸ¥çœ‹æ•ˆæœ */
+OS_TASK(OS_TASK_TEST2)
+{
+    OS_TASK_START(OS_TASK_TEST2);
+    /* ç¦æ­¢åœ¨OS_TASK_STARTå’ŒOS_TASK_ENDä¹‹é—´ä½¿ç”¨switch */
+    while (1)
+    {
+        printf("child task 1\n");
+        OS_TASK_WAITX(OS_TASK_TEST2, OS_SEC_TICKS * 3 / 10);
+        printf("child task 2\n");
+        OS_TASK_WAITX(OS_TASK_TEST2, OS_SEC_TICKS * 4 / 10);
+        printf("child task 3\n");
+        OS_TASK_WAITX(OS_TASK_TEST2, OS_SEC_TICKS * 5 / 10);
+    }
+    OS_TASK_END(OS_TASK_TEST2);
+}
+
+OS_TASK(OS_TASK_TEST1, void)
+{
+    OS_TASK_START(OS_TASK_TEST1);
+    /* ç¦æ­¢åœ¨OS_TASK_STARTå’ŒOS_TASK_ENDä¹‹é—´ä½¿ç”¨switch */
+    while (1)
+    {
+        printf("father task\n");
+        OS_TASK_WAITX(OS_TASK_TEST1, OS_SEC_TICKS * 2 / 10);
+        OS_CALL_SUBX(OS_TASK_TEST1, OS_SEC_TICKS * 5, OS_TASK_TEST2);
+    }
+    OS_TASK_END(OS_TASK_TEST1);
+}
+
+void tmos_test_main(void)
+{
+    OS_INIT_TASKS();
+    while (1)
+    {
+        /* æ‰€æœ‰çš„ä¸»ä»»åŠ¡éƒ½éœ€è¦æ‰‹åŠ¨åœ¨mainå‡½æ•°çš„while(1)ä¸­è°ƒç”¨ */
+        OS_RUN_TASK(OS_TASK_TEST1);
+    }
+}
+
+#elif 0     /* ä¿¡å·é‡ä¾‹å­ */
+
+OS_SEM_t sem_test;
+
+OS_TASK(OS_TASK_TEST2)
+{
+    OS_TASK_START(OS_TASK_TEST2);
+    /* ç¦æ­¢åœ¨OS_TASK_STARTå’ŒOS_TASK_ENDä¹‹é—´ä½¿ç”¨switch */
+    while (1)
+    {
+        OS_WAIT_SEM(OS_TASK_TEST2, sem_test, 1);
+        printf("OS_WAIT_SEM get\n");
+        OS_WAIT_SEMX(OS_TASK_TEST2, sem_test, 1, 20);
+        if (sem_test == OS_SEM_TIMEOUT)
+        {
+            printf("OS_WAIT_SEMX 1 timeout\n");
+        }
+        else
+        {
+            printf("OS_WAIT_SEMX 1 ok\n");
+        }
+        OS_WAIT_SEMX(OS_TASK_TEST2, sem_test, 1, 300);
+        if (sem_test == OS_SEM_TIMEOUT)
+        {
+            printf("OS_WAIT_SEMX 2 timeout\n");
+        }
+        else
+        {
+            printf("OS_WAIT_SEMX 2 ok\n");
+        }
+    }
+    OS_TASK_END(OS_TASK_TEST2);
+}
+
+OS_TASK(OS_TASK_TEST1, void)
+{
+    OS_TASK_START(OS_TASK_TEST1);
+    /* ç¦æ­¢åœ¨OS_TASK_STARTå’ŒOS_TASK_ENDä¹‹é—´ä½¿ç”¨switch */
+    while (1)
+    {
+        printf("send sem\n");
+        OS_SEND_SEM(sem_test);
+        OS_TASK_WAITX(OS_TASK_TEST1, OS_SEC_TICKS * 2 / 10);
+    }
+    OS_TASK_END(OS_TASK_TEST1);
+}
+
+void tmos_test_main(void)
+{
+    OS_INIT_TASKS();
+    OS_INIT_SEM(sem_test);
+    while (1)
+    {
+        /* æ‰€æœ‰çš„ä¸»ä»»åŠ¡éƒ½éœ€è¦æ‰‹åŠ¨åœ¨mainå‡½æ•°çš„while(1)ä¸­è°ƒç”¨ */
+        OS_RUN_TASK(OS_TASK_TEST1);
+        OS_RUN_TASK(OS_TASK_TEST2);
+    }
+}
+
+#endif
 
