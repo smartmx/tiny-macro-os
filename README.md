@@ -29,6 +29,7 @@ Protothread是专为资源有限的系统设计的一种耗费资源特别少并
 tiny macro os是结合了ProtoThread机制和时间轮询机制的调度内核，每个任务都有单独的时间变量和函数状态变量。  
 时间变量为全局变量，在软硬件定时器中更新。  
 函数状态变量为全局变量，用于保存函数目前运行的位置。  
+目的只为极度精简，并且可为51所用，所以不采用链表管理任务，需要手动在主循环中添加主任务。
 
 ## 移植
 
@@ -66,6 +67,8 @@ enum
 ```
 
 任务定义采用了可变参数宏定义，任务携带的参数类型随意，数量不限。
+
+该定义方法巧妙运用了编译器的编译顺序：宏定义展开->枚举变量替换，从而实现了用一个枚举变量的名字当作OS调度的识别和操作任务参数的数组下标。
 
 ### 无参数任务
 
@@ -120,6 +123,66 @@ void main()
 ```
 
 ## 使用例子
+
+### 任务挂起、复位、延迟、重启
+
+```c
+OS_TASK(OS_TASK_TEST2)
+{
+    OS_TASK_START(OS_TASK_TEST2);
+    /* 禁止在OS_TASK_START和OS_TASK_END之间使用switch */
+    while (1)
+    {
+        printf("task2 1\n");
+        OS_TASK_WAITX(OS_TASK_TEST2, OS_SEC_TICKS * 3 / 10);
+        printf("task2 2\n");
+        OS_TASK_WAITX(OS_TASK_TEST2, OS_SEC_TICKS * 4 / 10);
+        printf("task2 3\n");
+        OS_TASK_WAITX(OS_TASK_TEST2, OS_SEC_TICKS * 5 / 10);
+    }
+    OS_TASK_END(OS_TASK_TEST2);
+}
+
+OS_TASK(OS_TASK_TEST1, void)
+{
+    OS_TASK_START(OS_TASK_TEST1);
+    /* 禁止在OS_TASK_START和OS_TASK_END之间使用switch */
+    while (1)
+    {
+        printf("task1 start\n");
+        OS_TASK_WAITX(OS_TASK_TEST1, OS_SEC_TICKS * 3);
+
+        printf("suspend task2\n");
+        /*挂起任务，保留任务状态*/
+        OS_TASK_SUSPEND_ANOTHER(OS_TASK_TEST2);
+        OS_TASK_WAITX(OS_TASK_TEST1, OS_SEC_TICKS * 3);
+        printf("restart task2\n");
+        /* 必须已经停止的任务才可以重启，不然无效 */
+        OS_TASK_RESTART_ANOTHER(OS_TASK_TEST2, 0);
+        OS_TASK_WAITX(OS_TASK_TEST1, OS_SEC_TICKS * 3);
+
+        printf("exit task2\n");
+        /*退出任务，清除任务状态*/
+        OS_TASK_EXIT_ANOTHER(OS_TASK_TEST2);
+        OS_TASK_WAITX(OS_TASK_TEST1, OS_SEC_TICKS * 3);
+        printf("call task2\n");
+        OS_TASK_CALL_ANOTHER(OS_TASK_TEST2);
+        OS_TASK_WAITX(OS_TASK_TEST1, OS_SEC_TICKS * 3);
+    }
+    OS_TASK_END(OS_TASK_TEST1);
+}
+
+void tmos_test_main(void)
+{
+    OS_INIT_TASKS();
+    while (1)
+    {
+        /* 所有的主任务都需要手动在main函数的while(1)中调用 */
+        OS_RUN_TASK(OS_TASK_TEST1);
+        OS_RUN_TASK(OS_TASK_TEST2);
+    }
+}
+```
 
 ### 信号量
 
@@ -246,5 +309,13 @@ void tmos_test_main(void)
     }
 }
 ```
+
+## 注意事项
+
+宏定义中参数为`NAME`的，必须为自身的任务NAME
+
+宏定义中参数为`ANAME`的，参数必须为另一个任务
+
+宏定义中参数为`SUBNAME`的，该SUBNAME代表的子任务必须没有在主函数中循环执行
 
 ## [博客主页](https://blog.maxiang.vip/)
