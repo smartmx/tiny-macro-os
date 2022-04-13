@@ -24,17 +24,54 @@
  */
 #include "tiny-macro-os.h"
 
-/* 所有任务的时间变量值*/
+/* 所有任务的时间变量值，时间如果是在中断函数中更新，则时间类型必须中断安全。*/
+/* 如果时间类型非中断安全，则可以考虑使用OS_UPDATES_TIMERS(TICKS)代替OS_UPDATE_TIMERS()。*/
 volatile TINY_MACRO_OS_TIME_t os_task_timers[TINY_MACRO_OS_TASKS_MAX_NUM];
 
 /* 所有任务的函数运行标记值*/
 volatile TINY_MACRO_OS_LINE_t os_task_linenums[TINY_MACRO_OS_TASKS_MAX_NUM];
 
 /*
+单片机操作时间变量类型是中断安全的
+比如8位单片机操作8位数据
+32位单片机操作8、16、32位数据
 void SysTick_Handler(void)
 {
     //必须要在定时器函数中更新系统任务时钟timer，提供心跳
     OS_UPDATE_TIMERS();
+}
+*/
+
+/*
+单片机操作时间变量类型是非中断安全的
+比如8位单片机操作16、32位数据
+32位单片机操作64、128位数据
+
+为了中断安全使用OS_UPDATES_TIMERS(TICKS)例子
+
+unsigned int time;
+void SysTick_Handler(void)
+{
+    time++;             //在中断中更新时间计数
+}
+
+void tmos_test_main(void)
+{
+    OS_INIT_TASKS();
+    unsigned char i = 0;
+    while (1)
+    {
+        if(time > 0)
+        {
+            unsigned int stime;         //定义临时变量保存time的值
+            disable_interrupt();        //关中断，确保安全
+            stime = time;               //保存时间到临时变量中
+            time = 0;                   //清零时间计数
+            enable_interrupt();         //重新打开中断，开始时间计数
+            OS_UPDATES_TIMERS(stime);   //更新任务时间
+        }
+        OS_RUN_TASK(os_test1);
+    }
 }
 */
 
@@ -43,29 +80,29 @@ void SysTick_Handler(void)
 #if 1 /*普通任务和带参数任务编写和OS_TASK_WAITX使用例子 */
 
 /*void参数表示函数无参数，可以不写该void，但是定义不标准，所以写上void最好 */
-OS_TASK(OS_TASK_TEST1, void)
+OS_TASK(os_test1, void)
 {
-    OS_TASK_START(OS_TASK_TEST1);
+    OS_TASK_START(os_test1);
     /* 禁止在OS_TASK_START和OS_TASK_END之间使用switch */
     while (1)
     {
-        printf("OS_TASK_TEST1\n");
+        printf("os_test1\n");
         OS_TASK_WAITX(OS_SEC_TICKS * 6 / 10);
     }
-    OS_TASK_END(OS_TASK_TEST1);
+    OS_TASK_END(os_test1);
 }
 
 /* 带参数任务编写格式函数参数直接作为宏定义中的成员写进去即可 */
-OS_TASK(OS_TASK_TEST2, unsigned char params, ...)
+OS_TASK(os_test2, unsigned char params, ...)
 {
-    OS_TASK_START(OS_TASK_TEST2);
+    OS_TASK_START(os_test2);
     /* 禁止在OS_TASK_START和OS_TASK_END之间使用switch */
     while (1)
     {
-        printf("OS_TASK_TEST2:%d\n", params);
+        printf("os_test2:%d\n", params);
         OS_TASK_WAITX(OS_SEC_TICKS * 6 / 10);
     }
-    OS_TASK_END(OS_TASK_TEST2);
+    OS_TASK_END(os_test2);
 }
 
 void tmos_test_main(void)
@@ -75,8 +112,8 @@ void tmos_test_main(void)
     while (1)
     {
         /* 所有的主任务都需要手动在main函数的while(1)中调用 */
-        OS_RUN_TASK(OS_TASK_TEST1);
-        OS_RUN_TASK(OS_TASK_TEST2, i++);
+        OS_RUN_TASK(os_test1);
+        OS_RUN_TASK(os_test2, i++);
     }
 }
 
@@ -85,9 +122,9 @@ void tmos_test_main(void)
 unsigned char params_test;
 
 /*void参数表示函数无参数，可以不写该void，但是定义不标准，所以写上void最好 */
-OS_TASK(OS_TASK_TEST1, void)
+OS_TASK(os_test1, void)
 {
-    OS_TASK_START(OS_TASK_TEST1);
+    OS_TASK_START(os_test1);
     /* 禁止在OS_TASK_START和OS_TASK_END之间使用switch */
     while (1)
     {
@@ -96,27 +133,27 @@ OS_TASK(OS_TASK_TEST1, void)
         OS_TASK_WAITX(OS_SEC_TICKS / 10);
         params_test++;
     }
-    OS_TASK_END(OS_TASK_TEST1);
+    OS_TASK_END(os_test1);
 }
 
 /* 带参数任务编写格式函数参数直接作为宏定义中的成员写进去即可 */
-OS_TASK(OS_TASK_TEST2, unsigned char params, ...)
+OS_TASK(os_test2, unsigned char params, ...)
 {
     /* OS_TASK_WAIT_UNTILX需要一个常驻变量保存时间信息，可以是全局变量或局部静态变量 */
     static unsigned char timecnt;
-    OS_TASK_START(OS_TASK_TEST2);
+    OS_TASK_START(os_test2);
     /* 禁止在OS_TASK_START和OS_TASK_END之间使用switch */
     while (1)
     {
         /*每1个tick检测一次params是否可以被10整除*/
         OS_TASK_WAIT_UNTIL((params % 10) == 0, 1);
-        printf("OS_TASK_TEST2:%d\n", params);
+        printf("os_test2:%d\n", params);
         /*每OS_SEC_TICKS / 10个tick检测一次params是否可以被10整除，检测10次超时*/
         OS_TASK_WAIT_UNTILX((params % 100) == 0, OS_SEC_TICKS / 10, 10, timecnt);
-        printf("OS_TASK_TEST2:%d,cnt:%d\n", params, timecnt);
+        printf("os_test2:%d,cnt:%d\n", params, timecnt);
         OS_TASK_WAITX(OS_SEC_TICKS / 10);
     }
-    OS_TASK_END(OS_TASK_TEST2);
+    OS_TASK_END(os_test2);
 }
 
 void tmos_test_main(void)
@@ -126,16 +163,16 @@ void tmos_test_main(void)
     while (1)
     {
         /* 所有的主任务都需要手动在main函数的while(1)中调用 */
-        OS_RUN_TASK(OS_TASK_TEST1);
-        OS_RUN_TASK(OS_TASK_TEST2, params_test);
+        OS_RUN_TASK(os_test1);
+        OS_RUN_TASK(os_test2, params_test);
     }
 }
 
 #elif 0 /* OS_TASK_CALL_ANOTHER，OS_TASK_SUSPEND_ANOTHER，OS_TASK_EXIT_ANOTHER，OS_TASK_RESTART_ANOTHER运行例子 */
 
-OS_TASK(OS_TASK_TEST2)
+OS_TASK(os_test2)
 {
-    OS_TASK_START(OS_TASK_TEST2);
+    OS_TASK_START(os_test2);
     /* 禁止在OS_TASK_START和OS_TASK_END之间使用switch */
     while (1)
     {
@@ -146,12 +183,12 @@ OS_TASK(OS_TASK_TEST2)
         printf("task2 3\n");
         OS_TASK_WAITX(OS_SEC_TICKS * 5 / 10);
     }
-    OS_TASK_END(OS_TASK_TEST2);
+    OS_TASK_END(os_test2);
 }
 
-OS_TASK(OS_TASK_TEST1, void)
+OS_TASK(os_test1, void)
 {
-    OS_TASK_START(OS_TASK_TEST1);
+    OS_TASK_START(os_test1);
     /* 禁止在OS_TASK_START和OS_TASK_END之间使用switch */
     while (1)
     {
@@ -160,22 +197,22 @@ OS_TASK(OS_TASK_TEST1, void)
 
         printf("suspend task2\n");
         /*挂起任务，保留任务状态*/
-        OS_TASK_SUSPEND_ANOTHER(OS_TASK_TEST2);
+        OS_TASK_SUSPEND_ANOTHER(os_test2);
         OS_TASK_WAITX(OS_SEC_TICKS * 3);
         printf("restart task2\n");
         /* 必须已经停止的任务才可以重启，不然无效 */
-        OS_TASK_RESTART_ANOTHER(OS_TASK_TEST2, 0);
+        OS_TASK_RESTART_ANOTHER(os_test2, 0);
         OS_TASK_WAITX(OS_SEC_TICKS * 3);
 
         printf("exit task2\n");
         /*退出任务，清除任务状态*/
-        OS_TASK_EXIT_ANOTHER(OS_TASK_TEST2);
+        OS_TASK_EXIT_ANOTHER(os_test2);
         OS_TASK_WAITX(OS_SEC_TICKS * 3);
         printf("call task2\n");
-        OS_TASK_CALL_ANOTHER(OS_TASK_TEST2);
+        OS_TASK_CALL_ANOTHER(os_test2);
         OS_TASK_WAITX(OS_SEC_TICKS * 3);
     }
-    OS_TASK_END(OS_TASK_TEST1);
+    OS_TASK_END(os_test1);
 }
 
 void tmos_test_main(void)
@@ -184,17 +221,17 @@ void tmos_test_main(void)
     while (1)
     {
         /* 所有的主任务都需要手动在main函数的while(1)中调用 */
-        OS_RUN_TASK(OS_TASK_TEST1);
-        OS_RUN_TASK(OS_TASK_TEST2);
+        OS_RUN_TASK(os_test1);
+        OS_RUN_TASK(os_test2);
     }
 }
 
 #elif 0 /* OS_CALL_SUB子任务运行例子， */
 
 /* 子任务不退出，查看效果 */
-OS_TASK(OS_TASK_TEST2)
+OS_TASK(os_test2)
 {
-    OS_TASK_START(OS_TASK_TEST2);
+    OS_TASK_START(os_test2);
     /* 禁止在OS_TASK_START和OS_TASK_END之间使用switch */
     while (1)
     {
@@ -205,28 +242,28 @@ OS_TASK(OS_TASK_TEST2)
         printf("child task 3\n");
         OS_TASK_WAITX(OS_SEC_TICKS * 5 / 10);
     }
-    OS_TASK_END(OS_TASK_TEST2);
+    OS_TASK_END(os_test2);
 }
 
-OS_TASK(OS_TASK_TEST1, void)
+OS_TASK(os_test1, void)
 {
-    OS_TASK_START(OS_TASK_TEST1);
+    OS_TASK_START(os_test1);
     /* 禁止在OS_TASK_START和OS_TASK_END之间使用switch */
     while (1)
     {
         printf("father task\n");
         OS_TASK_WAITX(OS_SEC_TICKS * 2 / 10);
         /* 如果需要每次开始执行子任务时都需要子任务从头开始执行，在OS_CALL_SUB之前使用OS_TASK_RESET_ANOTHER复位子任务 */
-        OS_TASK_RESET_ANOTHER(OS_TASK_TEST2);
+        OS_TASK_RESET_ANOTHER(os_test2);
 #if 0
         /* 没有超时时间 */
-        OS_CALL_SUB(OS_TASK_TEST2);
+        OS_CALL_SUB(os_test2);
 #else
         /* 有超时时间 */
-        OS_CALL_SUBX(OS_SEC_TICKS * 5, OS_TASK_TEST2);
+        OS_CALL_SUBX(OS_SEC_TICKS * 5, os_test2);
 #endif
     }
-    OS_TASK_END(OS_TASK_TEST1);
+    OS_TASK_END(os_test1);
 }
 
 void tmos_test_main(void)
@@ -235,7 +272,7 @@ void tmos_test_main(void)
     while (1)
     {
         /* 所有的主任务都需要手动在main函数的while(1)中调用 */
-        OS_RUN_TASK(OS_TASK_TEST1);
+        OS_RUN_TASK(os_test1);
     }
 }
 
@@ -243,9 +280,9 @@ void tmos_test_main(void)
 
 OS_SEM_t sem_test;
 
-OS_TASK(OS_TASK_TEST2)
+OS_TASK(os_test2)
 {
-    OS_TASK_START(OS_TASK_TEST2);
+    OS_TASK_START(os_test2);
     /* 禁止在OS_TASK_START和OS_TASK_END之间使用switch */
     while (1)
     {
@@ -270,12 +307,12 @@ OS_TASK(OS_TASK_TEST2)
             printf("OS_WAIT_SEMX 2 ok\n");
         }
     }
-    OS_TASK_END(OS_TASK_TEST2);
+    OS_TASK_END(os_test2);
 }
 
-OS_TASK(OS_TASK_TEST1, void)
+OS_TASK(os_test1, void)
 {
-    OS_TASK_START(OS_TASK_TEST1);
+    OS_TASK_START(os_test1);
     /* 禁止在OS_TASK_START和OS_TASK_END之间使用switch */
     while (1)
     {
@@ -283,7 +320,7 @@ OS_TASK(OS_TASK_TEST1, void)
         OS_SEND_SEM(sem_test);
         OS_TASK_WAITX(OS_SEC_TICKS * 2 / 10);
     }
-    OS_TASK_END(OS_TASK_TEST1);
+    OS_TASK_END(os_test1);
 }
 
 void tmos_test_main(void)
@@ -293,8 +330,8 @@ void tmos_test_main(void)
     while (1)
     {
         /* 所有的主任务都需要手动在main函数的while(1)中调用 */
-        OS_RUN_TASK(OS_TASK_TEST1);
-        OS_RUN_TASK(OS_TASK_TEST2);
+        OS_RUN_TASK(os_test1);
+        OS_RUN_TASK(os_test2);
     }
 }
 
