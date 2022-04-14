@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2022, smartmx - smartmx@qq.com
+ * Copyright (c) 2022, smset - <https://github.com/smset028>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,7 +33,7 @@
 /* 如使用OS_TASK_DEFAULT，则任务函数名为OS_TASK_DEFAULT_task */
 enum
 {
-    os_test1 = 0,                   /* 第一个任务枚举必须赋值为0，确保不会定义过长的数组无错。 */
+    os_test1 = 0,                   /* 第一个任务枚举必须赋值为0，确保不会定义过长的数组。 */
     os_test2,                       /* 添加自己的任务直接在TINY_MACRO_OS_TASKS_MAX_NUM上方依次将任务名称加入本枚举即可 */
     TINY_MACRO_OS_TASKS_MAX_NUM,    /* 该选项不可删除或修改，用于计算任务数量去定义时间数组和状态数组，最大255个任务 */
 };
@@ -137,7 +138,7 @@ extern volatile TINY_MACRO_OS_LINE_t                os_task_linenums[TINY_MACRO_
 /* 挂起另一个指定任务，不可挂起自身 */
 #define OS_TASK_SUSPEND_ANOTHER(ANAME)              do{os_task_timers[(ANAME)]=(TINY_MACRO_OS_TIME_MAX);}while(0)
 
-/* 复位另一个任务，在下次运行时从头开始，可以和OS_TASK_CALL_ANOTHER配合使用来立刻重新开始运行一个任务 */
+/* 复位另一个任务，在下次运行时从头开始，可以和OS_TASK_CALL_ANOTHER配合使用来立刻重新开始运行另一个任务 */
 #define OS_TASK_RESET_ANOTHER(ANAME)                do{os_task_linenums[(ANAME)]=0;}while(0)
 
 /* 在指定时间后重新启动另一个已经停止运行的任务*/
@@ -146,7 +147,7 @@ extern volatile TINY_MACRO_OS_LINE_t                os_task_linenums[TINY_MACRO_
 /* 更新另一个任务的时间，以便突发事件运行任务 */
 #define OS_TASK_UPDATE_ANOTHER(ANAME, TICKS)        do{os_task_timers[(ANAME)]=(TICKS);}while(0)
 
-/* 停止并且再不运行运行另一个任务，复位任务状态，下一次运行从头开始，只可以在本任务中使用。 */
+/* 停止并且再不运行运行另一个任务，复位任务状态，下一次运行从头开始。 */
 #define OS_TASK_EXIT_ANOTHER(ANAME)                 do{os_task_linenums[(ANAME)]=0U;os_task_timers[(ANAME)]=(TINY_MACRO_OS_TIME_MAX);}while(0)
 
 /* 运行任务，不管任务时间状态立刻调用任务函数运行。 */
