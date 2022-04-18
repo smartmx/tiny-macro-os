@@ -454,6 +454,75 @@ void tmos_test_main(void)
 }
 ```
 
+### callback timer可重入任务
+
+区别于正式任务，callback timer任务是轻量的，可以被重入的函数任务。  
+有很多情况下比如控制灯开关，需要很多的任务函数，这时使用主任务就需要写很多控制函数，不值得，此时可以通过callback timer任务，用一个任务函数配合几十个或者上百个任务参数，来进行控制。
+
+ctimer任务是tiny-macro-os下的一个子任务，首先需要在os的任务枚举中添加`ctimer，`，然后在程序主循环中调用`OS_RUN_TASK(ctimer);`。
+
+每个ctimer都需要经过初始化后才可以使用：`OS_CTIMER_INIT(ctimer_test1, ctimer_test, &i);`
+
+ctimer可重入任务中的函数不可以使用正常os中的任务调度宏，可重入任务的宏是单独的，而且没有调用子任务的宏可以使用。
+
+```c
+unsigned char i = 0, j = 0;
+
+/*void参数表示函数无参数，可以不写该void，但是定义不标准，所以写上void最好 */
+OS_TASK(os_test1, void)
+{
+    OS_TASK_START(os_test1);
+    /* 禁止在OS_TASK_START和OS_TASK_END之间使用switch */
+    while (1)
+    {
+        printf("os_test1\n");
+        OS_TASK_WAITX(OS_SEC_TICKS * 6 / 10);
+    }
+    OS_TASK_END(os_test1);
+}
+
+/* 带参数任务编写格式函数参数直接作为宏定义中的成员写进去即可 */
+OS_TASK(os_test2, unsigned char params, ...)
+{
+    OS_TASK_START(os_test2);
+    /* 禁止在OS_TASK_START和OS_TASK_END之间使用switch */
+    while (1)
+    {
+        printf("os_test2:%d\n", params);
+        OS_TASK_WAITX(OS_SEC_TICKS * 6 / 10);
+    }
+    OS_TASK_END(os_test2);
+}
+
+/* ctimer task是可以重入的，ctimer的数量是可用于重入的参数数量 */
+OS_CTIMER_TASK(ctimer_test)
+{
+    OS_CTIMER_TASK_START();
+    while(1)
+    {
+        printf("i:%d, j:%d, ctimer:%d\n", i, j, *((unsigned char *)(p)));
+        OS_CTIMER_TASK_WAITX(10); /* 延迟10个CTIMER_PERIOD_TICKS */
+        j++;
+    }
+    OS_CTIMER_TASK_END();
+}
+
+void tmos_test_main(void)
+{
+    OS_INIT_TASKS();
+
+    OS_CTIMER_INIT(ctimer_test1, ctimer_test, &i);
+    OS_CTIMER_INIT(ctimer_test2, ctimer_test, &j);
+    while (1)
+    {
+        /* 所有的主任务都需要手动在main函数的while(1)中调用 */
+        OS_RUN_TASK(ctimer);
+        OS_RUN_TASK(os_test1);
+        OS_RUN_TASK(os_test2, i++);
+    }
+}
+```
+
 ## 注意事项
 
 宏定义中参数为`NAME`的，必须为自身任务的NAME
