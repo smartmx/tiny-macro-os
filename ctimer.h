@@ -31,7 +31,8 @@
 /* 如果准备使用ctimer，需要在tiny-macro-os.h中的任务枚举中添加ctimer，并在主任务循环中，添加ctimer任务调用OS_RUN_TASK(ctimer)。 */
 
 /* 准备使用几个ctimer就在这里加上枚举 */
-enum {
+enum
+{
     ctimer_test1 = 0,
     ctimer_test2,
     CTIMER_MAX_NUM,
@@ -46,7 +47,7 @@ typedef struct _ctimer_struct
     void *ptr;
     TINY_MACRO_OS_TIME_t ticks;
     TINY_MACRO_OS_LINE_t line;
-}ctimer_t;
+} ctimer_t;
 
 extern ctimer_t os_ctimers[CTIMER_MAX_NUM];
 
