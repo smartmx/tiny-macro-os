@@ -24,6 +24,7 @@
  *
  */
 #include "tiny-macro-os.h"
+#include "ctimer.h"
 
 /* 所有任务的时间变量值，时间如果是在中断函数中更新，则时间类型必须中断安全。*/
 /* 如果时间类型非中断安全，则可以考虑使用OS_UPDATES_TIMERS(TICKS)代替OS_UPDATE_TIMERS()。*/
@@ -78,7 +79,7 @@ void tmos_test_main(void)
 
 /* 下面的例子可以通过更改#if 1启用，然后在程序main函数中调用tmos_test_main查看例子运行效果 */
 
-#if 1 /*普通任务和带参数任务编写和OS_TASK_WAITX使用例子 */
+#if 0 /*普通任务和带参数任务编写和OS_TASK_WAITX使用例子 */
 
 /*void参数表示函数无参数，可以不写该void，但是定义不标准，所以写上void最好 */
 OS_TASK(os_test1, void)
@@ -336,5 +337,61 @@ void tmos_test_main(void)
     }
 }
 
-#endif
+#elif 1
+/* ctimer task test. */
+unsigned char i = 0, j = 0;
 
+/*void参数表示函数无参数，可以不写该void，但是定义不标准，所以写上void最好 */
+OS_TASK(os_test1, void)
+{
+    OS_TASK_START(os_test1);
+    /* 禁止在OS_TASK_START和OS_TASK_END之间使用switch */
+    while (1)
+    {
+        printf("os_test1\n");
+        OS_TASK_WAITX(OS_SEC_TICKS * 6 / 10);
+    }
+    OS_TASK_END(os_test1);
+}
+
+/* 带参数任务编写格式函数参数直接作为宏定义中的成员写进去即可 */
+OS_TASK(os_test2, unsigned char params, ...)
+{
+    OS_TASK_START(os_test2);
+    /* 禁止在OS_TASK_START和OS_TASK_END之间使用switch */
+    while (1)
+    {
+        printf("os_test2:%d\n", params);
+        OS_TASK_WAITX(OS_SEC_TICKS * 6 / 10);
+    }
+    OS_TASK_END(os_test2);
+}
+
+/* ctimer task是可以重入的，ctimer的数量是可用于重入的参数数量 */
+OS_CTIMER_TASK(ctimer_test)
+{
+    OS_CTIMER_TASK_START();
+    while(1)
+    {
+        printf("i:%d, j:%d, ctimer:%d\n", i, j, *((unsigned char *)(p)));
+        OS_CTIMER_TASK_WAITX(10); /* 延迟10个CTIMER_PERIOD_TICKS */
+        j++;
+    }
+    OS_CTIMER_TASK_END();
+}
+
+void tmos_test_main(void)
+{
+    OS_INIT_TASKS();
+
+    OS_CTIMER_INIT(ctimer_test1, ctimer_test, &i);
+    OS_CTIMER_INIT(ctimer_test2, ctimer_test, &j);
+    while (1)
+    {
+        /* 所有的主任务都需要手动在main函数的while(1)中调用 */
+        OS_RUN_TASK(ctimer);
+        OS_RUN_TASK(os_test1);
+        OS_RUN_TASK(os_test2, i++);
+    }
+}
+#endif
