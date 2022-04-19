@@ -129,12 +129,37 @@ extern volatile TINY_MACRO_OS_LINE_t                os_task_linenums[TINY_MACRO_
 /* 发送信号量 */
 #define OS_SEND_SEM(SEM)                            do{(SEM)=0;} while(0)
 
-/*************************************子任务*******************************************/
+/**************************通过枚举定义的带有自己时间的子任务，需在枚举中添加自身的值，可以被其他任务结束*******************************************/
 /* 在任务中调用的子任务，会先退出主任务，在下一次执行主任务时，直接执行子任务。在子任务结束之前不会继续主任务，即子任务占用了主任务的系统时间变量使用权。 */
 #define OS_CALL_SUB(SUBNAME, ...)                   do{os_task_timers[(SUBNAME)]=0;os_task_linenums[(_task_name)]=(((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U); return 0U; case (((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U):{if(os_task_timers[(SUBNAME)]!=(TINY_MACRO_OS_TIME_MAX)){os_task_timers[(_task_name)]=(SUBNAME##_task)(__VA_ARGS__); if(os_task_timers[(_task_name)]!=(TINY_MACRO_OS_TIME_MAX)){return os_task_timers[(_task_name)];}}}} while(0)
 
 /* 在任务中调用的子任务并带有超时时间，在子任务结束之前不会继续主任务，即子任务占用了主任务的系统时间变量使用权，子任务的时间变量为子任务最大运行时间，即使子任务没有结束，达到超时时间也会退出。但是不可以是最大时间值TINY_MACRO_OS_TIME_MAX，这样子任务不会运行。 */
 #define OS_CALL_SUBX(TICKS, SUBNAME, ...)           do{os_task_timers[(SUBNAME)]=(TICKS);os_task_linenums[(_task_name)]=(((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U); return 0U; case (((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U):if((os_task_timers[(SUBNAME)]>0)&&(os_task_timers[(SUBNAME)]!=(TINY_MACRO_OS_TIME_MAX))){os_task_timers[(_task_name)]=(SUBNAME##_task)(__VA_ARGS__);if(os_task_timers[(_task_name)]!=(TINY_MACRO_OS_TIME_MAX)){return os_task_timers[(_task_name)];}}} while(0)
+
+/**************************私下定义的不带有自己时间的子任务，无需在枚举中添加自身的值，不可以被其他任务结束，只能等子任务退出，内部只可以使用SUBTASK宏函数*******************************************/
+/*主任务在任务中调用的子任务，在子任务结束之前不会继续主任务，即子任务占用了主任务的系统时间变量使用权*/
+#define OS_CALL_NSUB(NAME, ...)						do{os_task_linenums[(_task_name)]=(TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U;return 0U;case (TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U:{ TINY_MACRO_OS_TIME_t st;st=(NAME##_subtask)(__VA_ARGS__);if(st!=TINY_MACRO_OS_TIME_MAX) {return st;}}} while(0)
+
+/* 子任务调用子任务 */
+#define OS_NSUB_CALL_NSUB(NAME, ...)				do{os_task_lc=(TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U;return 0U; case (TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U:{ TINY_MACRO_OS_TIME_t st; st=(NAME##_subtask)(__VA_ARGS__); if(st!=TINY_MACRO_OS_TIME_MAX) {return st;}}} while(0)
+
+/* 子任务函数声明 */
+#define OS_SUBTASK(NAME, ...)                      	TINY_MACRO_OS_TIME_t (NAME##_subtask)(__VA_ARGS__)
+
+/* 子任务函数调度开始定义 */
+#define OS_SUBTASK_START()							static TINY_MACRO_OS_LINE_t os_task_lc=0U;switch(os_task_lc){case 0U:
+
+/* 子任务函数调度结束定义 */
+#define OS_SUBTASK_END()							break;}os_task_lc=0U;return TINY_MACRO_OS_TIME_MAX
+
+/* 停止并且再不运行运行当前子任务，复位任务状态，下一次运行从头开始，只可以在本任务中使用。 */
+#define OS_SUBTASK_EXIT()							do{os_task_lc=0U;}while(0);return TINY_MACRO_OS_TIME_MAX
+
+/* 退出当前子任务，并等待对应时间，保存当前运行位置，时间单位为中断里定义的系统最小时间。 */
+#define OS_SUBTASK_WAITX(TICKS)						os_task_lc=(TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U;if(os_task_lc){return (TICKS);}break;case ((TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX)+1U:
+
+/* 跳出当前任务，保存当前运行位置，等下一次执行时继续运行 */
+#define OS_SUBTASK_YIELD()                       	OS_SUBTASK_WAITX(0)
 
 /*************************************以下函数只可以在其他任务函数中调用，不可以在自身函数中调用*******************************/
 /* 挂起另一个指定任务，不可挂起自身 */

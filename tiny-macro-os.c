@@ -337,7 +337,7 @@ void tmos_test_main(void)
     }
 }
 
-#elif 1
+#elif 0
 /* ctimer task test. */
 unsigned char i = 0, j = 0;
 
