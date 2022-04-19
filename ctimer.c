@@ -41,7 +41,10 @@ OS_TASK(ctimer, void)
             {
                 if (os_ctimers[i].ticks == 0)
                 {
-                    os_ctimers[i].ticks = os_ctimers[i].f(&os_ctimers[i].line, os_ctimers[i].ptr);
+                    if(os_ctimers[i].f != NULL)
+                    {
+                        os_ctimers[i].ticks = os_ctimers[i].f(&os_ctimers[i].line, os_ctimers[i].ptr);
+                    }
                 }
                 else
                 {

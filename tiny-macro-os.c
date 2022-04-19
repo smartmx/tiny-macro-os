@@ -394,4 +394,57 @@ void tmos_test_main(void)
         OS_RUN_TASK(os_test2, i++);
     }
 }
+
+#elif 0
+/* sub no time task test. */
+
+OS_SUBNT(sub_test1, unsigned char i)
+{
+    OS_SUBNT_START();
+    while((i%10)!=0)
+    {
+        printf("sub_test1\n");
+        OS_SUBNT_WAITX(OS_SEC_TICKS / 2);
+    }
+    OS_SUBNT_END();
+}
+
+/*void参数表示函数无参数，可以不写该void，但是定义不标准，所以写上void最好 */
+OS_TASK(os_test1, void)
+{
+    OS_TASK_START(os_test1);
+    /* 禁止在OS_TASK_START和OS_TASK_END之间使用switch */
+    while (1)
+    {
+        printf("os_test1\n");
+        OS_TASK_WAITX(OS_SEC_TICKS * 6 / 10);
+    }
+    OS_TASK_END(os_test1);
+}
+
+/* 带参数任务编写格式函数参数直接作为宏定义中的成员写进去即可 */
+OS_TASK(os_test2, unsigned char params, ...)
+{
+    OS_TASK_START(os_test2);
+    /* 禁止在OS_TASK_START和OS_TASK_END之间使用switch */
+    while (1)
+    {
+        printf("os_test2\n");
+        OS_CALL_SUBNT(sub_test1, params);
+    }
+    OS_TASK_END(os_test2);
+}
+
+void tmos_test_main(void)
+{
+    unsigned char i = 0;
+    OS_INIT_TASKS();
+    while (1)
+    {
+        /* 所有的主任务都需要手动在main函数的while(1)中调用 */
+        OS_RUN_TASK(os_test1);
+        OS_RUN_TASK(os_test2, i++);
+    }
+}
+
 #endif
