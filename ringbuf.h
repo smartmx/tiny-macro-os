@@ -82,7 +82,7 @@ struct ringbuf {
  *
  */
 void    ringbuf_init(struct ringbuf *r, uint8_t *a,
-		     RINGBUF_INDEX_CONF_TYPE size_power_of_two);
+             RINGBUF_INDEX_CONF_TYPE size_power_of_two);
 
 /**
  * \brief      Insert a byte into the ring buffer

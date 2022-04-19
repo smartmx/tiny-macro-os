@@ -52,7 +52,7 @@ ringbuf_put(struct ringbuf *r, uint8_t c)
      the ->get_ptr field may be written concurrently by the
      ringbuf_get() function. To avoid this, access to ->get_ptr must
      be atomic. We use RINGBUF_INDEX_CONF_TYPE, users cans change to
-     the type which makes access atomically, 
+     the type which makes access atomically,
      but C does not guarantee this.
   */
   if(((r->put_ptr - r->get_ptr) & r->mask) == r->mask) {
@@ -74,7 +74,7 @@ int
 ringbuf_get(struct ringbuf *r)
 {
   uint8_t c;
-  
+
   /* Check if there are bytes in the buffer. If so, we return the
      first one and increase the pointer. If there are no bytes left, we
      return -1.
@@ -82,8 +82,8 @@ ringbuf_get(struct ringbuf *r)
      XXX: there is a potential risk for a race condition here, because
      the ->put_ptr field may be written concurrently by the
      ringbuf_put() function. To avoid this, access to ->get_ptr must
-     be atomic. We use RINGBUF_INDEX_CONF_TYPE, users cans change to 
-     the type which makes access atomically, 
+     be atomic. We use RINGBUF_INDEX_CONF_TYPE, users cans change to
+     the type which makes access atomically,
      but C does not guarantee this.
   */
   if(((r->put_ptr - r->get_ptr) & r->mask) > 0) {
