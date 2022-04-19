@@ -38,7 +38,9 @@ enum
     CTIMER_MAX_NUM,
 };
 
-#define CTIMER_PERIOD_TICKS     (OS_SEC_TICKS / 100) /* ctimer更新自身时间 */
+#define CTIMER_SEC_TICK         100 /* ctimer任务1秒钟的ticks数量 */
+
+#define CTIMER_PERIOD_TICKS     (OS_SEC_TICKS / CTIMER_SEC_TICK) /* ctimer更新自身时间的周期 */
 
 /* callback timer */
 typedef struct _ctimer_struct
