@@ -31,6 +31,9 @@
 
 /* 如果准备使用ctimer，需要在tiny-macro-os.h中的任务枚举中添加ctimer，并在主任务循环中，添加ctimer任务调用OS_RUN_TASK(ctimer)。 */
 
+/* 用于用户自己更改全局变量名称，方便一个程序包含多个tiny macro os进行调度 */
+#define TASK_CTIMERS os_task_ctimers
+
 /* 准备使用几个ctimer就在这里加上枚举 */
 enum
 {
@@ -52,10 +55,10 @@ typedef struct _ctimer_struct
     TINY_MACRO_OS_LINE_t line;
 } ctimer_t;
 
-extern ctimer_t os_ctimers[CTIMER_MAX_NUM];
+extern ctimer_t TASK_CTIMERS[CTIMER_MAX_NUM];
 
 /* 初始化ctimer参数 */
-#define OS_CTIMER_INIT(NAME, FUNC, PTR)                     do{os_ctimers[NAME].f=(FUNC);os_ctimers[NAME].ptr=(PTR);os_ctimers[NAME].ticks=0;os_ctimers[NAME].line=0;}while(0)
+#define OS_CTIMER_INIT(NAME, FUNC, PTR)                     do{TASK_CTIMERS[NAME].f=(FUNC);TASK_CTIMERS[NAME].ptr=(PTR);TASK_CTIMERS[NAME].ticks=0;TASK_CTIMERS[NAME].line=0;}while(0)
 
 /* ctimer任务定义，和OS_TASK不同，必须不可和枚举变量名称一样 */
 #define OS_CTIMER_TASK(FUNC)                                TINY_MACRO_OS_TIME_t (FUNC)(TINY_MACRO_OS_LINE_t *lc, void *p)
@@ -97,22 +100,22 @@ extern ctimer_t os_ctimers[CTIMER_MAX_NUM];
 
 /*************************************以下函数只可以在其他任务函数中调用，不可以在自身函数中调用*******************************/
 /* 挂起另一个指定任务，不可挂起自身 */
-#define OS_CTIMER_TASK_SUSPEND_ANOTHER(ANAME)               do{os_ctimers[(ANAME)].ticks=(TINY_MACRO_OS_TIME_MAX);}while(0)
+#define OS_CTIMER_TASK_SUSPEND_ANOTHER(ANAME)               do{TASK_CTIMERS[(ANAME)].ticks=(TINY_MACRO_OS_TIME_MAX);}while(0)
 
 /* 复位另一个任务，在下次运行时从头开始，可以和OS_CTIMER_TASK_CALL_ANOTHER配合使用来立刻重新开始运行另一个任务 */
-#define OS_CTIMER_TASK_RESET_ANOTHER(ANAME)                 do{os_ctimers[(ANAME)].line=0;}while(0)
+#define OS_CTIMER_TASK_RESET_ANOTHER(ANAME)                 do{TASK_CTIMERS[(ANAME)].line=0;}while(0)
 
 /* 在指定时间后重新启动另一个已经停止运行的任务*/
-#define OS_CTIMER_TASK_RESTART_ANOTHER(ANAME, TICKS)        do{if(os_ctimers[(ANAME)].ticks==(TINY_MACRO_OS_TIME_MAX)){os_ctimers[(ANAME)].ticks=(TICKS);}}while(0)
+#define OS_CTIMER_TASK_RESTART_ANOTHER(ANAME, TICKS)        do{if(TASK_CTIMERS[(ANAME)].ticks==(TINY_MACRO_OS_TIME_MAX)){TASK_CTIMERS[(ANAME)].ticks=(TICKS);}}while(0)
 
 /* 更新另一个任务的时间，以便突发事件运行任务 */
-#define OS_CTIMER_TASK_UPDATE_ANOTHER(ANAME, TICKS)         do{os_ctimers[(ANAME)].ticks=(TICKS);}while(0)
+#define OS_CTIMER_TASK_UPDATE_ANOTHER(ANAME, TICKS)         do{TASK_CTIMERS[(ANAME)].ticks=(TICKS);}while(0)
 
 /* 停止并且再不运行运行另一个任务，复位任务状态，下一次运行从头开始。 */
-#define OS_CTIMER_TASK_EXIT_ANOTHER(ANAME)                  do{os_ctimers[(ANAME)].line=0U;os_ctimers[(ANAME)].ticks=(TINY_MACRO_OS_TIME_MAX);}while(0)
+#define OS_CTIMER_TASK_EXIT_ANOTHER(ANAME)                  do{TASK_CTIMERS[(ANAME)].line=0U;TASK_CTIMERS[(ANAME)].ticks=(TINY_MACRO_OS_TIME_MAX);}while(0)
 
 /* 运行任务，不管任务时间状态立刻调用任务函数运行。 */
-#define OS_CTIMER_TASK_CALL_ANOTHER(ANAME, ...)             do{os_ctimers[ANAME].ticks=os_ctimers[ANAME].f(&os_ctimers[ANAME].line,os_ctimers[ANAME].ptr);}while(0)
+#define OS_CTIMER_TASK_CALL_ANOTHER(ANAME, ...)             do{TASK_CTIMERS[ANAME].ticks=TASK_CTIMERS[ANAME].f(&TASK_CTIMERS[ANAME].line,TASK_CTIMERS[ANAME].ptr);}while(0)
 
 /*在主任务中需要循环添加的任务*/
 extern OS_TASK(ctimer, void);

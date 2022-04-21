@@ -29,10 +29,10 @@
 
 /* 所有任务的时间变量值，时间如果是在中断函数中更新，则时间类型必须中断安全。*/
 /* 如果时间类型非中断安全，则可以考虑使用OS_UPDATES_TIMERS(TICKS)代替OS_UPDATE_TIMERS()。*/
-volatile TINY_MACRO_OS_TIME_t os_task_timers[TINY_MACRO_OS_TASKS_MAX_NUM];
+volatile TINY_MACRO_OS_TIME_t OS_TIMERS[TINY_MACRO_OS_TASKS_MAX_NUM];
 
 /* 所有任务的函数运行标记值*/
-volatile TINY_MACRO_OS_LINE_t os_task_linenums[TINY_MACRO_OS_TASKS_MAX_NUM];
+volatile TINY_MACRO_OS_LINE_t OS_LINES[TINY_MACRO_OS_TASKS_MAX_NUM];
 
 /*
 单片机操作时间变量类型是中断安全的

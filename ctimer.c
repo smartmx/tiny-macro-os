@@ -27,7 +27,7 @@
 #include "ctimer.h"
 
 /* callback timer tasks params for tiny-macro-os. */
-ctimer_t os_ctimers[CTIMER_MAX_NUM];
+ctimer_t TASK_CTIMERS[CTIMER_MAX_NUM];
 
 OS_TASK(ctimer, void)
 {
@@ -38,18 +38,18 @@ OS_TASK(ctimer, void)
         OS_TASK_WAITX(CTIMER_PERIOD_TICKS);
         for (i = 0; i < CTIMER_MAX_NUM; i++)
         {
-            if (os_ctimers[i].ticks != TINY_MACRO_OS_TIME_MAX)
+            if (TASK_CTIMERS[i].ticks != TINY_MACRO_OS_TIME_MAX)
             {
-                if (os_ctimers[i].ticks == 0)
+                if (TASK_CTIMERS[i].ticks == 0)
                 {
-                    if(os_ctimers[i].f != NULL)
+                    if(TASK_CTIMERS[i].f != NULL)
                     {
-                        os_ctimers[i].ticks = os_ctimers[i].f(&os_ctimers[i].line, os_ctimers[i].ptr);
+                        TASK_CTIMERS[i].ticks = TASK_CTIMERS[i].f(&TASK_CTIMERS[i].line, TASK_CTIMERS[i].ptr);
                     }
                 }
                 else
                 {
-                    os_ctimers[i].ticks--;
+                    TASK_CTIMERS[i].ticks--;
                 }
             }
         }

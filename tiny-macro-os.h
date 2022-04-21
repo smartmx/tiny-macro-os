@@ -53,11 +53,16 @@ enum
 
 #define TINY_MACRO_OS_LINE_MAX                      (TINY_MACRO_OS_LINE_t)(0xffffffff) /* 最大函数行数计数值 */
 
+/* 用于用户自己更改全局变量名称，方便一个程序包含多个tiny macro os进行调度 */
+#define OS_TIMERS                                   os_task_timers
+
+#define OS_LINES                                    os_task_linenums
+
 /* 所有任务的时间变量值。*/
-extern volatile TINY_MACRO_OS_TIME_t                os_task_timers[TINY_MACRO_OS_TASKS_MAX_NUM];
+extern volatile TINY_MACRO_OS_TIME_t                OS_TIMERS[TINY_MACRO_OS_TASKS_MAX_NUM];
 
 /* 所有任务的函数运行标记值。*/
-extern volatile TINY_MACRO_OS_LINE_t                os_task_linenums[TINY_MACRO_OS_TASKS_MAX_NUM];
+extern volatile TINY_MACRO_OS_LINE_t                OS_LINES[TINY_MACRO_OS_TASKS_MAX_NUM];
 
 /****TINY_MACRO_OS FUNCTIONS*********************************************************************************/
 /*
@@ -69,32 +74,32 @@ extern volatile TINY_MACRO_OS_LINE_t                os_task_linenums[TINY_MACRO_
 #define OS_TASK(NAME, ...)                          TINY_MACRO_OS_TIME_t (NAME##_task)(__VA_ARGS__)
 
 /* 函数任务系统调度开始定义 */
-#define OS_TASK_START(NAME)                         enum{_task_name=NAME};switch(os_task_linenums[(NAME)]){case 0U:
+#define OS_TASK_START(NAME)                         enum{_task_name=NAME};switch(OS_LINES[(NAME)]){case 0U:
 
 /* 函数任务系统调度结束定义 */
-#define OS_TASK_END(NAME)                           break;}os_task_linenums[(NAME)]=0U;return (TINY_MACRO_OS_TIME_MAX)
+#define OS_TASK_END(NAME)                           break;}OS_LINES[(NAME)]=0U;return (TINY_MACRO_OS_TIME_MAX)
 
 /* 运行调用任务函数，应当在主程序的while(1)里使用 */
-#define OS_RUN_TASK(NAME, ...)                      do{if(os_task_timers[(NAME)]==0U){os_task_timers[NAME]=(NAME##_task)(__VA_ARGS__);}}while(0)
+#define OS_RUN_TASK(NAME, ...)                      do{if(OS_TIMERS[(NAME)]==0U){OS_TIMERS[NAME]=(NAME##_task)(__VA_ARGS__);}}while(0)
 
 /* High Priority高优先级运行任务。该任务返回的时间值不能一直为0，必须有等待时间让出使用权，不然下面的其他任务将无法继续运行，OS主循环中先写HPTASK，再写普通TASK。*/
-#define OS_RUN_HPTASK(NAME, ...)                    {if(os_task_timers[(NAME)]==0U){os_task_timers[(NAME)]=(NAME##_task)(__VA_ARGS__);continue;}}
+#define OS_RUN_HPTASK(NAME, ...)                    {if(OS_TIMERS[(NAME)]==0U){OS_TIMERS[(NAME)]=(NAME##_task)(__VA_ARGS__);continue;}}
 
 /* 调度开始之前，初始化所有任务，每个任务接下来都会被执行 */
-#define OS_INIT_TASKS()                             do{unsigned char i;for(i=0U;i<(TINY_MACRO_OS_TASKS_MAX_NUM);i++){os_task_timers[i]=0U;os_task_linenums[i]=0U;}}while(0)
+#define OS_INIT_TASKS()                             do{unsigned char i;for(i=0U;i<(TINY_MACRO_OS_TASKS_MAX_NUM);i++){OS_TIMERS[i]=0U;OS_LINES[i]=0U;}}while(0)
 
 /* 更新系统时间，该函数应该放入定时器中断函数中处理，或者软件定时器中也可 */
-#define OS_UPDATE_TIMERS()                          do{unsigned char i;for(i=0U;i<(TINY_MACRO_OS_TASKS_MAX_NUM);i++){if(os_task_timers[i]!=0U){if(os_task_timers[i]!=(TINY_MACRO_OS_TIME_MAX)){os_task_timers[i]--;}}}} while(0)
+#define OS_UPDATE_TIMERS()                          do{unsigned char i;for(i=0U;i<(TINY_MACRO_OS_TASKS_MAX_NUM);i++){if(OS_TIMERS[i]!=0U){if(OS_TIMERS[i]!=(TINY_MACRO_OS_TIME_MAX)){OS_TIMERS[i]--;}}}} while(0)
 
 /* 更新系统时间，该函数可以一次减少数个ticks，在中断安全类型不足以满足延迟时间的情况下使用，在主循环中调用，TICKS参数放在中断中更新，提升中断安全性 */
-#define OS_UPDATES_TIMERS(TICKS)                    do{unsigned char i;for(i=0U;i<(TINY_MACRO_OS_TASKS_MAX_NUM);i++){if(os_task_timers[i]!=0U){if(os_task_timers[i]!=(TINY_MACRO_OS_TIME_MAX)){if(os_task_timers[i]>(TICKS)){os_task_timers[i]=(os_task_timers[i]-(TICKS));}else{os_task_timers[i]=0;}}}}} while(0)
+#define OS_UPDATES_TIMERS(TICKS)                    do{unsigned char i;for(i=0U;i<(TINY_MACRO_OS_TASKS_MAX_NUM);i++){if(OS_TIMERS[i]!=0U){if(OS_TIMERS[i]!=(TINY_MACRO_OS_TIME_MAX)){if(OS_TIMERS[i]>(TICKS)){OS_TIMERS[i]=(OS_TIMERS[i]-(TICKS));}else{OS_TIMERS[i]=0;}}}}} while(0)
 
 /*********************************** 以下函数只可以在自身的任务函数中调用 *************************************/
 /* 停止并且再不运行运行当前任务，复位任务状态，下一次运行从头开始，只可以在本任务中使用。 */
-#define OS_TASK_EXIT()                              do{os_task_linenums[(_task_name)]=0U;}while(0);return (TINY_MACRO_OS_TIME_MAX)
+#define OS_TASK_EXIT()                              do{OS_LINES[(_task_name)]=0U;}while(0);return (TINY_MACRO_OS_TIME_MAX)
 
 /* 退出当前任务，并等待对应时间，保存当前运行位置，时间单位为中断里定义的系统最小时间。 */
-#define OS_TASK_WAITX(TICKS)                        do{os_task_linenums[(_task_name)]=(((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U);return(TICKS);case (((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U):;}while(0)
+#define OS_TASK_WAITX(TICKS)                        do{OS_LINES[(_task_name)]=(((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U);return(TICKS);case (((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U):;}while(0)
 
 /* 跳出当前任务，保存当前运行位置，等下一次执行时继续运行 */
 #define OS_TASK_YIELD()                             OS_TASK_WAITX(0)
@@ -106,7 +111,7 @@ extern volatile TINY_MACRO_OS_LINE_t                os_task_linenums[TINY_MACRO_
 #define OS_TASK_SUSPEND()                           OS_TASK_WAITX(TINY_MACRO_OS_TIME_MAX)
 
 /* 复位当前任务，在指定时间后开始下一次运行，并从头开始 */
-#define OS_TASK_RESET(TICKS)                        do{os_task_linenums[(_task_name)]=0;}while(0);return (TICKS)
+#define OS_TASK_RESET(TICKS)                        do{OS_LINES[(_task_name)]=0;}while(0);return (TICKS)
 
 /* 等待条件 C 满足再继续向下执行，查询频率为每ticks个时钟一次 */
 #define OS_TASK_WAIT_UNTIL(C, TICKS)                do{OS_TASK_WAITX(TICKS); if(!(C)) return (TICKS);} while(0)
@@ -132,33 +137,33 @@ extern volatile TINY_MACRO_OS_LINE_t                os_task_linenums[TINY_MACRO_
 
 /*************************************以下函数只可以在其他任务函数中调用，不可以在自身函数中调用*******************************/
 /* 挂起另一个指定任务，不可挂起自身 */
-#define OS_TASK_SUSPEND_ANOTHER(ANAME)              do{os_task_timers[(ANAME)]=(TINY_MACRO_OS_TIME_MAX);}while(0)
+#define OS_TASK_SUSPEND_ANOTHER(ANAME)              do{OS_TIMERS[(ANAME)]=(TINY_MACRO_OS_TIME_MAX);}while(0)
 
 /* 复位另一个任务，在下次运行时从头开始，可以和OS_TASK_CALL_ANOTHER配合使用来立刻重新开始运行另一个任务 */
-#define OS_TASK_RESET_ANOTHER(ANAME)                do{os_task_linenums[(ANAME)]=0;}while(0)
+#define OS_TASK_RESET_ANOTHER(ANAME)                do{OS_LINES[(ANAME)]=0;}while(0)
 
 /* 在指定时间后重新启动另一个已经停止运行的任务*/
-#define OS_TASK_RESTART_ANOTHER(ANAME, TICKS)       do{if(os_task_timers[(ANAME)]==(TINY_MACRO_OS_TIME_MAX)){os_task_timers[(ANAME)]=(TICKS);}}while(0)
+#define OS_TASK_RESTART_ANOTHER(ANAME, TICKS)       do{if(OS_TIMERS[(ANAME)]==(TINY_MACRO_OS_TIME_MAX)){OS_TIMERS[(ANAME)]=(TICKS);}}while(0)
 
 /* 更新另一个任务的时间，以便突发事件运行任务 */
-#define OS_TASK_UPDATE_ANOTHER(ANAME, TICKS)        do{os_task_timers[(ANAME)]=(TICKS);}while(0)
+#define OS_TASK_UPDATE_ANOTHER(ANAME, TICKS)        do{OS_TIMERS[(ANAME)]=(TICKS);}while(0)
 
 /* 停止并且再不运行运行另一个任务，复位任务状态，下一次运行从头开始。 */
-#define OS_TASK_EXIT_ANOTHER(ANAME)                 do{os_task_linenums[(ANAME)]=0U;os_task_timers[(ANAME)]=(TINY_MACRO_OS_TIME_MAX);}while(0)
+#define OS_TASK_EXIT_ANOTHER(ANAME)                 do{OS_LINES[(ANAME)]=0U;OS_TIMERS[(ANAME)]=(TINY_MACRO_OS_TIME_MAX);}while(0)
 
 /* 运行任务，不管任务时间状态立刻调用任务函数运行。 */
-#define OS_TASK_CALL_ANOTHER(ANAME, ...)            do{os_task_timers[(ANAME)]=(ANAME##_task)(__VA_ARGS__);} while(0)
+#define OS_TASK_CALL_ANOTHER(ANAME, ...)            do{OS_TIMERS[(ANAME)]=(ANAME##_task)(__VA_ARGS__);} while(0)
 
 /**************************调用通过枚举定义的带有自己时间的子任务，需在枚举中添加自身的值，可以被其他任务结束*******************************************/
 /* 在任务中调用的子任务，会先退出主任务，在下一次执行主任务时，直接执行子任务。在子任务结束之前不会继续主任务，即子任务占用了主任务的系统时间变量使用权。 */
-#define OS_CALL_SUB(SUBNAME, ...)                   do{os_task_timers[(SUBNAME)]=0;os_task_linenums[(_task_name)]=(((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U); return 0U; case (((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U):{if(os_task_timers[(SUBNAME)]!=(TINY_MACRO_OS_TIME_MAX)){os_task_timers[(_task_name)]=(SUBNAME##_task)(__VA_ARGS__); if(os_task_timers[(_task_name)]!=(TINY_MACRO_OS_TIME_MAX)){return os_task_timers[(_task_name)];}}}} while(0)
+#define OS_CALL_SUB(SUBNAME, ...)                   do{OS_TIMERS[(SUBNAME)]=0;OS_LINES[(_task_name)]=(((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U); return 0U; case (((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U):{if(OS_TIMERS[(SUBNAME)]!=(TINY_MACRO_OS_TIME_MAX)){OS_TIMERS[(_task_name)]=(SUBNAME##_task)(__VA_ARGS__); if(OS_TIMERS[(_task_name)]!=(TINY_MACRO_OS_TIME_MAX)){return OS_TIMERS[(_task_name)];}}}} while(0)
 
 /* 在任务中调用的子任务并带有超时时间，在子任务结束之前不会继续主任务，即子任务占用了主任务的系统时间变量使用权，子任务的时间变量为子任务最大运行时间，即使子任务没有结束，达到超时时间也会退出。但是不可以是最大时间值TINY_MACRO_OS_TIME_MAX，这样子任务不会运行。 */
-#define OS_CALL_SUBX(TICKS, SUBNAME, ...)           do{os_task_timers[(SUBNAME)]=(TICKS);os_task_linenums[(_task_name)]=(((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U); return 0U; case (((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U):if((os_task_timers[(SUBNAME)]>0)&&(os_task_timers[(SUBNAME)]!=(TINY_MACRO_OS_TIME_MAX))){os_task_timers[(_task_name)]=(SUBNAME##_task)(__VA_ARGS__);if(os_task_timers[(_task_name)]!=(TINY_MACRO_OS_TIME_MAX)){return os_task_timers[(_task_name)];}}} while(0)
+#define OS_CALL_SUBX(TICKS, SUBNAME, ...)           do{OS_TIMERS[(SUBNAME)]=(TICKS);OS_LINES[(_task_name)]=(((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U); return 0U; case (((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U):if((OS_TIMERS[(SUBNAME)]>0)&&(OS_TIMERS[(SUBNAME)]!=(TINY_MACRO_OS_TIME_MAX))){OS_TIMERS[(_task_name)]=(SUBNAME##_task)(__VA_ARGS__);if(OS_TIMERS[(_task_name)]!=(TINY_MACRO_OS_TIME_MAX)){return OS_TIMERS[(_task_name)];}}} while(0)
 
 /**************************私下定义的不带有自己时间的子任务，无需在枚举中添加自身的值，不可以被其他任务结束，只能等子任务退出，内部只可以使用SUNT(sub no time task)宏函数*******************************************/
 /*主任务在任务中调用的子任务，在子任务结束之前不会继续主任务，即子任务占用了主任务的系统时间变量使用权*/
-#define OS_CALL_SUBNT(NAME, ...)                    do{os_task_linenums[(_task_name)]=(TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U;return 0U;case (TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U:{ TINY_MACRO_OS_TIME_t st;st=(NAME##_subnt)(__VA_ARGS__);if(st!=TINY_MACRO_OS_TIME_MAX) {return st;}}} while(0)
+#define OS_CALL_SUBNT(NAME, ...)                    do{OS_LINES[(_task_name)]=(TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U;return 0U;case (TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U:{ TINY_MACRO_OS_TIME_t st;st=(NAME##_subnt)(__VA_ARGS__);if(st!=TINY_MACRO_OS_TIME_MAX) {return st;}}} while(0)
 
 /* SubNT子任务调用SubNT子任务 */
 #define OS_SUBNT_CALL_SUBNT(NAME, ...)              do{os_task_lc=(TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U;return 0U; case (TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U:{ TINY_MACRO_OS_TIME_t st; st=(NAME##_subnt)(__VA_ARGS__); if(st!=TINY_MACRO_OS_TIME_MAX) {return st;}}} while(0)
