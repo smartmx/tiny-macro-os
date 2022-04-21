@@ -104,6 +104,9 @@ extern volatile TINY_MACRO_OS_LINE_t                OS_LINES[TINY_MACRO_OS_TASKS
 /* 跳出当前任务，保存当前运行位置，等下一次执行时继续运行 */
 #define OS_TASK_YIELD()                             OS_TASK_WAITX(0)
 
+/* 设置函数状态 */
+#define OS_TASK_SET_STATE()                         do{OS_LINES[(_task_name)]=(((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U);case (((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U):;}while(0)
+
 /* 等待时间，不改变上一次函数跳转位置 */
 #define OS_TASK_CWAITX(TICKS)                       return (TICKS)
 
@@ -185,6 +188,12 @@ extern volatile TINY_MACRO_OS_LINE_t                OS_LINES[TINY_MACRO_OS_TASKS
 
 /* 跳出当前SubNT子任务，保存当前运行位置，等下一次执行时继续运行 */
 #define OS_SUBNT_YIELD()                            OS_SUBNT_WAITX(0)
+
+/* 设置函数状态 */
+#define OS_SUBNT_SET_STATE()                        do{os_task_lc=(((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U);case (((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U):;}while(0)
+
+/* 等待时间，不改变上一次函数跳转位置 */
+#define OS_SUBNT_CWAITX(TICKS)                      return (TICKS)
 
 /* 复位当前SubNT子任务，在指定时间后开始下一次运行，并从头开始 */
 #define OS_SUBNT_RESET(TICKS)                       do{os_task_lc=0;}while(0);return (TICKS)

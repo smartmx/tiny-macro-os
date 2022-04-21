@@ -78,6 +78,12 @@ extern ctimer_t TASK_CTIMERS[CTIMER_MAX_NUM];
 /* 跳出当前任务，保存当前运行位置，等下一次执行时继续运行 */
 #define OS_CTIMER_TASK_YIELD()                              OS_CTIMER_TASK_WAITX(0)
 
+/* 设置函数状态 */
+#define OS_CTIMER_TASK_SET_STATE()                          do{(*lc)=(((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U);case (((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U):;}while(0)
+
+/* 等待时间，不改变上一次函数跳转位置 */
+#define OS_CTIMER_TASK_CWAITX(TICKS)                        return (TICKS)
+
 /* 挂起当前任务 */
 #define OS_CTIMER_TASK_SUSPEND()                            OS_CTIMER_TASK_WAITX(TINY_MACRO_OS_TIME_MAX)
 
