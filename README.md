@@ -34,6 +34,12 @@ tiny macro os是结合了ProtoThread机制和时间轮询机制的调度内核�
 
 ## 移植
 
+tiny-macro-os是在支持c99平台上使用的，任务函数可以使用可变宏参数定义。
+
+tiny-macro-os-c89是运行在c89平台上使用，任务函数无法使用可变宏参数定义，任务函数不再带参数，所以功能会少一些。
+
+两个选一个使用，另一个删除即可。
+
 移植首先需要根据自己的需求在tiny-macro-os.h中修改下列宏定义：
 
 ```c
@@ -394,6 +400,8 @@ void tmos_test_main(void)
 ```
 
 ### 信号量
+
+信号量非中断安全，如果需要在中断中使用信号量，建议使用`OS_TASK_CWAITX`配合`OS_TASK_SET_STATE`进行信号量检索
 
 ```c
 OS_SEM_t sem_test;
