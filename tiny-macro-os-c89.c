@@ -83,7 +83,7 @@ void tmos_test_main(void)
 
 /* 下面的例子可以通过更改#if 1启用，然后在程序main函数中调用tmos_test_main查看例子运行效果 */
 
-#if 0 /*普通任务和带参数任务编写和OS_TASK_WAITX使用例子 */
+#if 0 /*普通任务OS_TASK_WAITX使用例子 */
 
 OS_TASK(os_test1)
 {
@@ -392,7 +392,7 @@ void tmos_test_main(void)
     }
 }
 
-#elif 1
+#elif 0
 /* sub no time task test. */
 unsigned char i = 0;
 
