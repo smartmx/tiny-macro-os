@@ -124,7 +124,7 @@ void tmos_test_main(void)
 
 unsigned char params_test;
 
-OS_TASK(os_test1, void)
+OS_TASK(os_test1)
 {
     OS_TASK_START(os_test1);
     /* 禁止在OS_TASK_START和OS_TASK_END之间使用switch */
