@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2022, smartmx - smartmx@qq.com
- * Copyright (c) 2008, Swedish Institute of Computer Science.
+ * Copyright (c) 2015, SICS Swedish ICT.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,47 +29,54 @@
  *
  */
 
-#include "ringbuf.h"
+#include "ringbufindex.h"
 
-void ringbuf_init(struct ringbuf *r, uint8_t *dataptr, RINGBUF_INDEX_CONF_TYPE size)
+/* Initialize a ring buffer. The size must be a power of two */
+void ringbufindex_init(struct ringbufindex *r, RINGBUF_INDEX_CONF_TYPE size)
 {
-    r->data = dataptr;
     r->mask = size - 1;
     r->put_ptr = 0;
     r->get_ptr = 0;
 }
 
-int ringbuf_put(struct ringbuf *r, uint8_t c)
+/* Put one element to the ring buffer */
+int ringbufindex_put(struct ringbufindex *r)
 {
     /* Check if buffer is full. If it is full, return 0 to indicate that
-       the element was not inserted into the buffer.
+       the element was not inserted.
 
        XXX: there is a potential risk for a race condition here, because
        the ->get_ptr field may be written concurrently by the
-       ringbuf_get() function. To avoid this, access to ->get_ptr must
-       be atomic. We use RINGBUF_INDEX_CONF_TYPE, users cans change to
-       the type which makes access atomically,
-       but C does not guarantee this.
-    */
+       ringbufindex_get() function. To avoid this, access to ->get_ptr must
+       be atomic. We use an uint8_t type, which makes access atomic on
+       most platforms, but C does not guarantee this.
+     */
     if (((r->put_ptr - r->get_ptr) & r->mask) == r->mask)
     {
         return 0;
     }
-    /*
-     * CC_ACCESS_NOW is used because the compiler is allowed to reorder
-     * the access to non-volatile variables.
-     * In this case a reader might read from the moved index/ptr before
-     * its value (c) is written. Reordering makes little sense, but
-     * better safe than sorry.
-     */
-    CC_ACCESS_NOW(uint8_t, r->data[r->put_ptr]) = c;
     CC_ACCESS_NOW(RINGBUF_INDEX_CONF_TYPE, r->put_ptr) = (r->put_ptr + 1) & r->mask;
     return 1;
 }
 
-int ringbuf_get(struct ringbuf *r)
+/* Check if there is space to put an element.
+ * Return the index where the next element is to be added */
+int ringbufindex_peek_put(const struct ringbufindex *r)
 {
-    uint8_t c;
+    /* Check if there are bytes in the buffer. If so, we return the
+       first one. If there are no bytes left, we return -1.
+     */
+    if (((r->put_ptr - r->get_ptr) & r->mask) == r->mask)
+    {
+        return -1;
+    }
+    return r->put_ptr;
+}
+
+/* Remove the first element and return its index */
+int ringbufindex_get(struct ringbufindex *r)
+{
+    int get_ptr;
 
     /* Check if there are bytes in the buffer. If so, we return the
        first one and increase the pointer. If there are no bytes left, we
@@ -77,25 +84,15 @@ int ringbuf_get(struct ringbuf *r)
 
        XXX: there is a potential risk for a race condition here, because
        the ->put_ptr field may be written concurrently by the
-       ringbuf_put() function. To avoid this, access to ->get_ptr must
-       be atomic. We use RINGBUF_INDEX_CONF_TYPE, users cans change to
-       the type which makes access atomically,
-       but C does not guarantee this.
-    */
+       ringbufindex_put() function. To avoid this, access to ->get_ptr must
+       be atomic. We use an uint8_t type, which makes access atomic on
+       most platforms, but C does not guarantee this.
+     */
     if (((r->put_ptr - r->get_ptr) & r->mask) > 0)
     {
-        /*
-         * CC_ACCESS_NOW is used because the compiler is allowed to reorder
-         * the access to non-volatile variables.
-         * In this case the memory might be freed and overwritten by
-         * increasing get_ptr before the value was copied to c.
-         * Opposed to the put-operation this would even make sense,
-         * because the register used for mask can be reused to save c
-         * (on some architectures).
-         */
-        c = CC_ACCESS_NOW(uint8_t, r->data[r->get_ptr]);
+        get_ptr = r->get_ptr;
         CC_ACCESS_NOW(RINGBUF_INDEX_CONF_TYPE, r->get_ptr) = (r->get_ptr + 1) & r->mask;
-        return c;
+        return get_ptr;
     }
     else
     {
@@ -103,13 +100,43 @@ int ringbuf_get(struct ringbuf *r)
     }
 }
 
-int ringbuf_size(struct ringbuf *r)
+/* Return the index of the first element
+ * (which will be removed if calling ringbufindex_get) */
+int ringbufindex_peek_get(const struct ringbufindex *r)
+{
+    /* Check if there are bytes in the buffer. If so, we return the
+       first one. If there are no bytes left, we return -1.
+     */
+    if (((r->put_ptr - r->get_ptr) & r->mask) > 0)
+    {
+        return r->get_ptr;
+    }
+    else
+    {
+        return -1;
+    }
+}
+
+/* Return the ring buffer size */
+int ringbufindex_size(const struct ringbufindex *r)
 {
     return r->mask + 1;
 }
 
-int ringbuf_elements(struct ringbuf *r)
+/* Return the number of elements currently in the ring buffer */
+int ringbufindex_elements(const struct ringbufindex *r)
 {
     return (r->put_ptr - r->get_ptr) & r->mask;
 }
 
+/* Is the ring buffer full? */
+int ringbufindex_full(const struct ringbufindex *r)
+{
+    return ((r->put_ptr - r->get_ptr) & r->mask) == r->mask;
+}
+
+/* Is the ring buffer empty? */
+int ringbufindex_empty(const struct ringbufindex *r)
+{
+    return ringbufindex_elements(r) == 0;
+}

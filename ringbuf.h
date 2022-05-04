@@ -27,8 +27,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
  *
- * This file is part of the Contiki operating system.
- *
  */
 
 /**
@@ -40,16 +38,20 @@
  *
  */
 
-#ifndef RINGBUF_H_
-#define RINGBUF_H_
+#ifndef _RINGBUF_H_
+#define _RINGBUF_H_
 
 /* add typedefinitions of your chips. */
 #include "stdint.h"
 
 /* access to RINGBUF_INDEX_CONF_TYPE must be atomic. */
-#define RINGBUF_INDEX_CONF_TYPE uint8_t
+#ifndef RINGBUF_INDEX_CONF_TYPE
+    #define RINGBUF_INDEX_CONF_TYPE uint8_t
+#endif
 
-#define CC_ACCESS_NOW(type, variable) (*(volatile type *)&(variable))
+#ifndef CC_ACCESS_NOW
+    #define CC_ACCESS_NOW(type, variable) (*(volatile type *)&(variable))
+#endif
 
 /**
  * \brief      Structure that holds the state of a ring buffer.
@@ -60,12 +62,13 @@
  *             elements.
  *
  */
-struct ringbuf {
-  uint8_t *data;
-  RINGBUF_INDEX_CONF_TYPE mask;
+struct ringbuf
+{
+    uint8_t *data;
+    RINGBUF_INDEX_CONF_TYPE mask;
 
-  /* XXX these must be 8-bit quantities to avoid race conditions. */
-  RINGBUF_INDEX_CONF_TYPE put_ptr, get_ptr;
+    /* XXX these must be 8-bit quantities to avoid race conditions. */
+    RINGBUF_INDEX_CONF_TYPE put_ptr, get_ptr;
 };
 
 /**
@@ -81,8 +84,7 @@ struct ringbuf {
  *             bytes.
  *
  */
-void    ringbuf_init(struct ringbuf *r, uint8_t *a,
-             RINGBUF_INDEX_CONF_TYPE size_power_of_two);
+void ringbuf_init(struct ringbuf *r, uint8_t *a, RINGBUF_INDEX_CONF_TYPE size_power_of_two);
 
 /**
  * \brief      Insert a byte into the ring buffer
@@ -95,7 +97,7 @@ void    ringbuf_init(struct ringbuf *r, uint8_t *a,
  *             handler.
  *
  */
-int     ringbuf_put(struct ringbuf *r, uint8_t c);
+int ringbuf_put(struct ringbuf *r, uint8_t c);
 
 
 /**
@@ -108,21 +110,21 @@ int     ringbuf_put(struct ringbuf *r, uint8_t c);
  *             handler.
  *
  */
-int     ringbuf_get(struct ringbuf *r);
+int ringbuf_get(struct ringbuf *r);
 
 /**
  * \brief      Get the size of a ring buffer
  * \param r    A pointer to a struct ringbuf to hold the state of the ring buffer
  * \return     The size of the buffer.
  */
-int     ringbuf_size(struct ringbuf *r);
+int ringbuf_size(struct ringbuf *r);
 
 /**
  * \brief      Get the number of elements currently in the ring buffer
  * \param r    A pointer to a struct ringbuf to hold the state of the ring buffer
  * \return     The number of elements in the buffer.
  */
-int     ringbuf_elements(struct ringbuf *r);
+int ringbuf_elements(struct ringbuf *r);
 
 #endif /* RINGBUF_H_ */
 
