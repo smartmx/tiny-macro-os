@@ -64,7 +64,7 @@ extern ctimer_t TASK_CTIMERS[CTIMER_MAX_NUM];
 #define OS_CTIMER_TASK(FUNC)                                TINY_MACRO_OS_TIME_t (FUNC)(TINY_MACRO_OS_LINE_t *lc, void *p)
 
 /* 函数任务系统调度开始定义 */
-#define OS_CTIMER_TASK_START()                              switch(*lc){case 0U:
+#define OS_CTIMER_TASK_START()                              switch(*lc){default:
 
 /* 函数任务系统调度结束定义 */
 #define OS_CTIMER_TASK_END()                                break;}(*lc)=0;return (TINY_MACRO_OS_TIME_MAX)

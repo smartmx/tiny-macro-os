@@ -74,7 +74,7 @@ extern volatile TINY_MACRO_OS_LINE_t                OS_LINES[TINY_MACRO_OS_TASKS
 #define OS_TASK(NAME, ...)                          TINY_MACRO_OS_TIME_t (NAME##_task)(__VA_ARGS__)
 
 /* 函数任务系统调度开始定义 */
-#define OS_TASK_START(NAME)                         enum{_task_name=NAME};switch(OS_LINES[(NAME)]){case 0U:
+#define OS_TASK_START(NAME)                         enum{_task_name=NAME};switch(OS_LINES[(NAME)]){default:
 
 /* 函数任务系统调度结束定义 */
 #define OS_TASK_END(NAME)                           break;}OS_LINES[(NAME)]=0U;return (TINY_MACRO_OS_TIME_MAX)
