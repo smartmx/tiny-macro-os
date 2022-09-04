@@ -96,6 +96,8 @@ extern ctimer_t TASK_CTIMERS[CTIMER_MAX_NUM];
 /* 等待条件 C 满足再继续向下执行，查询频率为每ticks个时钟一次，带有超时次数，需要用户自己提供一个变量进行超时计算，不可为局部变量，必须为全局变量或者函数内静态变量 */
 #define OS_CTIMER_TASK_WAIT_UNTILX(C, TICKS, TIMES, VAR)    do{(VAR)=(TIMES);OS_CTIMER_TASK_WAITX((TICKS));if(!(C)&&((VAR)>0)){(VAR)--;return (TICKS);}} while(0)
 
+#define OS_CTIMER_TASK_IS_RUNNING(NAME)                     (TASK_CTIMERS[NAME].ticks!=TINY_MACRO_OS_TIME_MAX)
+
 /*************************************信号量*******************************************/
 
 /* 等待信号量，查询频率为每ticks个时钟一次 */
