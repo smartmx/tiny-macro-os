@@ -100,7 +100,7 @@ extern ctimer_t TASK_CTIMERS[CTIMER_MAX_NUM];
 #define OS_CTIMER_TASK_IS_RUNNING(NAME)                     (TASK_CTIMERS[NAME].ticks!=TINY_MACRO_OS_TIME_MAX)
 
 /* 判断任务是否已经退出 */
-#define OS_TASK_IS_EXITED(NAME)                             (TASK_CTIMERS[NAME].ticks==TINY_MACRO_OS_TIME_MAX)
+#define OS_CTIMER_TASK_IS_EXITED(NAME)                      (TASK_CTIMERS[NAME].ticks==TINY_MACRO_OS_TIME_MAX)
 
 /*************************************信号量*******************************************/
 
