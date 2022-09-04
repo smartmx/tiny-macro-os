@@ -122,7 +122,11 @@ extern volatile TINY_MACRO_OS_LINE_t                OS_LINES[TINY_MACRO_OS_TASKS
 /* 等待条件 C 满足再继续向下执行，查询频率为每ticks个时钟一次，带有超时次数，需要用户自己提供一个变量进行超时计算，不可为局部变量，必须为全局变量或者函数内静态变量 */
 #define OS_TASK_WAIT_UNTILX(C, TICKS, TIMES, VAR)   do{(VAR)=(TIMES);OS_TASK_WAITX((TICKS));if(!(C)&&((VAR)>0)){(VAR)--;return (TICKS);}} while(0)
 
+/* 判断任务是否在运行 */
 #define OS_TASK_IS_RUNNING(NAME)                    (OS_TIMERS[NAME]!=TINY_MACRO_OS_TIME_MAX)
+
+/* 判断任务是否已经退出 */
+#define OS_TASK_IS_EXITED(NAME)                     (OS_TIMERS[NAME]==TINY_MACRO_OS_TIME_MAX)
 
 /*************************************信号量*******************************************/
 /* 等待信号量超时 */
