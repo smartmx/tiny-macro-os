@@ -181,7 +181,7 @@ extern volatile TINY_MACRO_OS_LINE_t                OS_LINES[TINY_MACRO_OS_TASKS
 #define OS_SUBNT(NAME, ...)                         TINY_MACRO_OS_TIME_t (NAME##_subnt)(__VA_ARGS__)
 
 /* SubNT子任务函数调度开始定义 */
-#define OS_SUBNT_START()                            static TINY_MACRO_OS_LINE_t os_task_lc=0U;switch(os_task_lc){case 0U:
+#define OS_SUBNT_START()                            static TINY_MACRO_OS_LINE_t os_task_lc=0U;switch(os_task_lc){default:
 
 /* SubNT子任务函数调度结束定义 */
 #define OS_SUBNT_END()                              break;}os_task_lc=0U;return TINY_MACRO_OS_TIME_MAX
