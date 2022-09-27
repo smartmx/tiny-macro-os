@@ -467,7 +467,7 @@ void tmos_test_main(void)
 区别于正式任务，callback timer任务是轻量的，可以被重入的函数任务。  
 有很多情况下比如控制灯开关，需要很多的任务函数，这时使用主任务就需要写很多控制函数，不值得，此时可以通过callback timer任务，用一个任务函数配合几十个或者上百个任务参数，来进行控制。
 
-ctimer任务是tiny-macro-os下的一个子任务，首先需要在os的任务枚举中添加`ctimer，`，然后在程序主循环中调用`OS_RUN_TASK(ctimer);`。
+ctimer任务是tiny-macro-os下的一个子任务，首先需要在os的任务枚举中添加`ctimer`，然后在程序主循环中调用`OS_RUN_TASK(ctimer);`。
 
 每个ctimer都需要经过初始化后才可以使用：`OS_CTIMER_INIT(ctimer_test1, ctimer_test, &i);`
 
