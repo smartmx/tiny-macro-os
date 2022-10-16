@@ -33,7 +33,6 @@ OS_TASK(ctimer, void)
 {
     unsigned char i;
     OS_TASK_START(ctimer);
-    while (1)
     {
         OS_TASK_WAITX(CTIMER_PERIOD_TICKS);
         for (i = 0; i < CTIMER_MAX_NUM; i++)
@@ -53,6 +52,7 @@ OS_TASK(ctimer, void)
                 }
             }
         }
+        OS_TASK_CWAITX(CTIMER_PERIOD_TICKS);
     }
     OS_TASK_END(ctimer);
 }
