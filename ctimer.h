@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, smartmx - smartmx@qq.com
+ * Copyright (c) 2023, smartmx - smartmx@qq.com
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -88,7 +88,7 @@ extern ctimer_t TASK_CTIMERS[CTIMER_MAX_NUM];
 #define OS_CTIMER_TASK_SUSPEND()                            OS_CTIMER_TASK_WAITX(TINY_MACRO_OS_TIME_MAX)
 
 /* 复位当前任务，在指定时间后开始下一次运行，并从头开始 */
-#define OS_CTIMER_TASK_RESET(TICKS)                         do{(*lc)=0;}while(0);return (TICKS)
+#define OS_CTIMER_TASK_RESET(TICKS)                         do{(*lc)=0;return (TICKS);}while(0)
 
 /* 等待条件 C 满足再继续向下执行，查询频率为每ticks个时钟一次 */
 #define OS_CTIMER_TASK_WAIT_UNTIL(C, TICKS)                 do{OS_CTIMER_TASK_WAITX(TICKS); if(!(C)) return (TICKS);} while(0)
@@ -130,6 +130,6 @@ extern ctimer_t TASK_CTIMERS[CTIMER_MAX_NUM];
 #define OS_CTIMER_TASK_CALL_ANOTHER(ANAME, ...)             do{TASK_CTIMERS[ANAME].ticks=TASK_CTIMERS[ANAME].f(&TASK_CTIMERS[ANAME].line,TASK_CTIMERS[ANAME].ptr);}while(0)
 
 /*在主任务中需要循环添加的任务*/
-extern OS_TASK(ctimer, void);
+extern OS_TASK(os_ctimer, void);
 
 #endif /* _CTIMER_H_ */

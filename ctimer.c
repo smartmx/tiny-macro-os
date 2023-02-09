@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, smartmx - smartmx@qq.com
+ * Copyright (c) 2023, smartmx - smartmx@qq.com
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,10 +29,10 @@
 /* callback timer tasks params for tiny-macro-os. */
 ctimer_t TASK_CTIMERS[CTIMER_MAX_NUM];
 
-OS_TASK(ctimer, void)
+OS_TASK(os_ctimer, void)
 {
     unsigned char i;
-    OS_TASK_START(ctimer);
+    OS_TASK_START(os_ctimer);
     {
         OS_TASK_WAITX(CTIMER_PERIOD_TICKS);
         for (i = 0; i < CTIMER_MAX_NUM; i++)
@@ -54,5 +54,5 @@ OS_TASK(ctimer, void)
         }
         OS_TASK_CWAITX(CTIMER_PERIOD_TICKS);
     }
-    OS_TASK_END(ctimer);
+    OS_TASK_END(os_ctimer);
 }

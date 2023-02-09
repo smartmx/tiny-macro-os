@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, smartmx - smartmx@qq.com
+ * Copyright (c) 2023, smartmx - smartmx@qq.com
  * Copyright (c) 2022, smset - <https://github.com/smset028>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -35,7 +35,7 @@
 /* ctimer为callback timer任务，如果不使用可以将其删除。 */
 enum
 {
-    ctimer = 0,                     /* 第一个任务枚举必须赋值为0，确保不会定义过长的数组。 */
+    os_ctimer = 0,                  /* 第一个任务枚举必须赋值为0，确保不会定义过长的数组。 */
     os_test1,
     os_test2,                       /* 添加自己的任务直接在TINY_MACRO_OS_TASKS_MAX_NUM上方依次将任务名称加入本枚举即可 */
     TINY_MACRO_OS_TASKS_MAX_NUM,    /* 该选项不可删除或修改，用于计算任务数量去定义时间数组和状态数组，最大255个任务 */
@@ -96,7 +96,7 @@ extern volatile TINY_MACRO_OS_LINE_t                OS_LINES[TINY_MACRO_OS_TASKS
 
 /*********************************** 以下函数只可以在自身的任务函数中调用 *************************************/
 /* 停止并且再不运行运行当前任务，复位任务状态，下一次运行从头开始，只可以在本任务中使用。 */
-#define OS_TASK_EXIT()                              do{OS_LINES[(_task_name)]=0U;}while(0);return (TINY_MACRO_OS_TIME_MAX)
+#define OS_TASK_EXIT()                              do{OS_LINES[(_task_name)]=0U;return (TINY_MACRO_OS_TIME_MAX);}while(0)
 
 /* 退出当前任务，并等待对应时间，保存当前运行位置，时间单位为中断里定义的系统最小时间。 */
 #define OS_TASK_WAITX(TICKS)                        do{OS_LINES[(_task_name)]=(((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U);return(TICKS);case (((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U):;}while(0)
@@ -114,7 +114,7 @@ extern volatile TINY_MACRO_OS_LINE_t                OS_LINES[TINY_MACRO_OS_TASKS
 #define OS_TASK_SUSPEND()                           OS_TASK_WAITX(TINY_MACRO_OS_TIME_MAX)
 
 /* 复位当前任务，在指定时间后开始下一次运行，并从头开始 */
-#define OS_TASK_RESET(TICKS)                        do{OS_LINES[(_task_name)]=0;}while(0);return (TICKS)
+#define OS_TASK_RESET(TICKS)                        do{OS_LINES[(_task_name)]=0;return (TICKS);}while(0)
 
 /* 等待条件 C 满足再继续向下执行，查询频率为每ticks个时钟一次 */
 #define OS_TASK_WAIT_UNTIL(C, TICKS)                do{OS_TASK_WAITX(TICKS); if(!(C)) return (TICKS);} while(0)
@@ -187,7 +187,7 @@ extern volatile TINY_MACRO_OS_LINE_t                OS_LINES[TINY_MACRO_OS_TASKS
 #define OS_SUBNT_END()                              break;}os_task_lc=0U;return TINY_MACRO_OS_TIME_MAX
 
 /* 停止并且再不运行运行当前SubNT子任务，复位任务状态，下一次运行从头开始，只可以在本任务中使用。 */
-#define OS_SUBNT_EXIT()                             do{os_task_lc=0U;}while(0);return TINY_MACRO_OS_TIME_MAX
+#define OS_SUBNT_EXIT()                             do{os_task_lc=0U;return TINY_MACRO_OS_TIME_MAX;}while(0)
 
 /* 退出当前SubNT子任务，并等待对应时间，保存当前运行位置，时间单位为中断里定义的系统最小时间。 */
 #define OS_SUBNT_WAITX(TICKS)                       do{os_task_lc=((TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U);return (TICKS);case (((TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX)+1U):;}while(0)
@@ -202,7 +202,7 @@ extern volatile TINY_MACRO_OS_LINE_t                OS_LINES[TINY_MACRO_OS_TASKS
 #define OS_SUBNT_YIELD()                            OS_SUBNT_WAITX(0)
 
 /* 复位当前SubNT子任务，在指定时间后开始下一次运行，并从头开始 */
-#define OS_SUBNT_RESET(TICKS)                       do{os_task_lc=0;}while(0);return (TICKS)
+#define OS_SUBNT_RESET(TICKS)                       do{os_task_lc=0;return (TICKS);}while(0)
 
 /* 等待条件 C 满足再继续向下执行SubNT子任务，查询频率为每ticks个时钟一次 */
 #define OS_SUBNT_WAIT_UNTIL(C, TICKS)               do{OS_SUBNT_WAITX(TICKS); if(!(C)) return (TICKS);} while(0)
