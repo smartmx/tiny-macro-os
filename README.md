@@ -2,7 +2,7 @@
 
 ## 简介
 
-Tiny Macro OS是借鉴了protothread和时间片轮转思想的宏定义调度内核。  
+Tiny Macro OS是借鉴了protothread和时间轮询的宏定义调度内核。  
 从各个论坛汲取代码汇总而成,  
 本版本是个人在开发中结合自身使用习惯优化后的版本。
 
