@@ -58,7 +58,7 @@ typedef struct _ctimer_struct
 extern ctimer_t TASK_CTIMERS[CTIMER_MAX_NUM];
 
 /* 初始化ctimer参数 */
-#define OS_CTIMER_INIT(NAME, FUNC, PTR)                     do{TASK_CTIMERS[NAME].f=(FUNC);TASK_CTIMERS[NAME].ptr=(PTR);TASK_CTIMERS[NAME].ticks=0;TASK_CTIMERS[NAME].line=0;}while(0)
+#define OS_CTIMER_INIT(NAME, FUNC, TICKS, PTR)              do{TASK_CTIMERS[NAME].f=(FUNC);TASK_CTIMERS[NAME].ptr=(PTR);TASK_CTIMERS[NAME].ticks=TICKS;TASK_CTIMERS[NAME].line=0;}while(0)
 
 /* ctimer任务定义，和OS_TASK不同，必须不可和枚举变量名称一样 */
 #define OS_CTIMER_TASK(FUNC)                                TINY_MACRO_OS_TIME_t (FUNC)(TINY_MACRO_OS_LINE_t *lc, void *p)

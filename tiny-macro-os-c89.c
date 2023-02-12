@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, smartmx - smartmx@qq.com
+ * Copyright (c) 2023, smartmx - smartmx@qq.com
  * Copyright (c) 2022, smset - <https://github.com/smset028>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -381,12 +381,12 @@ void tmos_test_main(void)
 {
     OS_INIT_TASKS();
 
-    OS_CTIMER_INIT(ctimer_test1, ctimer_test, &i);
-    OS_CTIMER_INIT(ctimer_test2, ctimer_test, &j);
+    OS_CTIMER_INIT(ctimer_test1, ctimer_test, 0, &i);
+    OS_CTIMER_INIT(ctimer_test2, ctimer_test, 0, &j);
     while (1)
     {
         /* 所有的主任务都需要手动在main函数的while(1)中调用 */
-        OS_RUN_TASK(ctimer);
+        OS_RUN_TASK(os_ctimer);
         OS_RUN_TASK(os_test1);
         OS_RUN_TASK(os_test2);
     }
