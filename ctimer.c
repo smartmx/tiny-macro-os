@@ -29,7 +29,11 @@
 /* callback timer tasks params for tiny-macro-os. */
 ctimer_t TASK_CTIMERS[CTIMER_MAX_NUM];
 
-OS_TASK(os_ctimer, void)
+#if COMPILER_SUPPORT_VA_ARGS
+extern OS_TASK(os_ctimer, void);
+#else
+extern OS_TASK(os_ctimer);
+#endif
 {
     unsigned char i;
     OS_TASK_START(os_ctimer);
@@ -41,7 +45,7 @@ OS_TASK(os_ctimer, void)
             {
                 if (TASK_CTIMERS[i].ticks == 0)
                 {
-                    if(TASK_CTIMERS[i].f != NULL)
+                    if (TASK_CTIMERS[i].f != NULL)
                     {
                         TASK_CTIMERS[i].ticks = TASK_CTIMERS[i].f(&TASK_CTIMERS[i].line, TASK_CTIMERS[i].ptr);
                     }

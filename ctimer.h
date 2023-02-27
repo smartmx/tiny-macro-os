@@ -127,9 +127,13 @@ extern ctimer_t TASK_CTIMERS[CTIMER_MAX_NUM];
 #define OS_CTIMER_TASK_EXIT_ANOTHER(ANAME)                  do{TASK_CTIMERS[(ANAME)].line=0U;TASK_CTIMERS[(ANAME)].ticks=(TINY_MACRO_OS_TIME_MAX);}while(0)
 
 /* 运行任务，不管任务时间状态立刻调用任务函数运行。 */
-#define OS_CTIMER_TASK_CALL_ANOTHER(ANAME, ...)             do{TASK_CTIMERS[ANAME].ticks=TASK_CTIMERS[ANAME].f(&TASK_CTIMERS[ANAME].line,TASK_CTIMERS[ANAME].ptr);}while(0)
+#define OS_CTIMER_TASK_CALL_ANOTHER(ANAME)                  do{TASK_CTIMERS[ANAME].ticks=TASK_CTIMERS[ANAME].f(&TASK_CTIMERS[ANAME].line,TASK_CTIMERS[ANAME].ptr);}while(0)
 
 /*在主任务中需要循环添加的任务*/
+#if COMPILER_SUPPORT_VA_ARGS
 extern OS_TASK(os_ctimer, void);
+#else
+extern OS_TASK(os_ctimer);
+#endif
 
 #endif /* _CTIMER_H_ */

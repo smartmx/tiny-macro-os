@@ -34,20 +34,16 @@ tiny macro os是结合了ProtoThread机制和时间轮询机制的调度内核�
 
 ## 移植
 
-tiny-macro-os是在支持c99平台上使用的，任务函数可以使用可变宏参数定义。
-
-tiny-macro-os-c89是运行在c89平台上使用，任务函数无法使用可变宏参数定义，任务函数不再带参数，所以功能会少一些。
-
-两个选一个使用，另一个删除即可。
-
 移植首先需要根据自己的需求在tiny-macro-os.h中修改下列宏定义：
 
 ```c
+#define COMPILER_SUPPORT_VA_ARGS                    1                 /* 编译器是否支持可变参数宏定义，C89(Keil C51)不支持，C99以上支持 */
 #define TINY_MACRO_OS_TIME_t                        unsigned short    /* 定义时间计数变量的类型，根据最长延迟修改 */
 #define TINY_MACRO_OS_LINE_t                        unsigned short    /* 定义任务切换记录变量的类型，根据最大函数占用行数修改 */
 #define OS_SEM_t                                    signed short      /* 信号量类型声明，必须为signed类型 */
 #define OS_SEC_TICKS                                1000              /* 定时器时钟更新频率，每秒钟多少个ticks */
 ```
+`COMPILER_SUPPORT_VA_ARGS`必须根据你的编译器设置，如果你的编译器支持可变参数宏定义，将该宏设置为1，如果不支持，设置为0。常见：Keil C51不支持；keil arm需要设置后才支持；IAR一般都支持；GCC一般都支持。
 
 `OS_SEM_t`是信号量类型定义，信号量类型必须为signed，其类型的最大值决定了在使用信号量超时判断时的最大判断次数，和信号量检测时间一起决定了信号量超时时间，可以通过判断信号量是否为`-1`来判断是否超时
 
