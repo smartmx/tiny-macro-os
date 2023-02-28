@@ -1,6 +1,6 @@
 /*
- * Copyright (c) 2023, smartmx - smartmx@qq.com
- * Copyright (c) 2022, smset - <https://github.com/smset028>
+ * Copyright (c) 2021-2023, smartmx - smartmx@qq.com
+ * Copyright (c) 2020, smset - <https://github.com/smset028>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
