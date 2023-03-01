@@ -199,7 +199,7 @@ extern volatile TINY_MACRO_OS_LINE_t                OS_LINES[TINY_MACRO_OS_TASKS
 #if COMPILER_SUPPORT_VA_ARGS
 #define OS_CALL_SUBNT(NAME, ...)                    do{OS_LINES[(_task_name)]=(TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U;return 0U;case (TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U:{ TINY_MACRO_OS_TIME_t st;st=(NAME##_subnt)(__VA_ARGS__);if(st!=TINY_MACRO_OS_TIME_MAX) {return st;}}} while(0)
 #else
-#define OS_RUN_HPTASK(NAME)                         {if(OS_TIMERS[(NAME)]==0U){OS_TIMERS[(NAME)]=(NAME##_task)();continue;}}
+#define OS_CALL_SUBNT(NAME)                         do{OS_LINES[(_task_name)]=(TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U;return 0U;case (TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U:{ TINY_MACRO_OS_TIME_t st;st=(NAME##_subnt)();if(st!=TINY_MACRO_OS_TIME_MAX) {return st;}}} while(0)
 #endif
 
 /* SubNT子任务调用SubNT子任务 */
@@ -251,5 +251,44 @@ extern volatile TINY_MACRO_OS_LINE_t                OS_LINES[TINY_MACRO_OS_TASKS
 
 /* SubNT子任务等待信号量，并有超时次数，查询频率为每ticks个时钟一次，超时时间为ticks*TIMES，所以ticks最好不要为0 */
 #define OS_SUBNT_WAIT_SEMX(SEM, TICKS, TIMES)       do{(SEM)=(TIMES)+1;OS_SUBNT_WAITX(TICKS); if((SEM)>1){(SEM)--;return (TICKS);}else{if((SEM)!=0){(SEM)=(OS_SEM_TIMEOUT);}}}while(0)
+
+/**************************没有时间管理的有限状态机函数，Finite State Machines，适合不确定时间的事件发生时的逻辑任务处理*******************************************/
+/* 有限状态机类型 */
+typedef TINY_MACRO_OS_LINE_t os_fsm_t;
+
+/* 有限状态机函数声明 */
+#if COMPILER_SUPPORT_VA_ARGS
+#define OS_FSM_FUNC(FUNCTION, ...)                  void (os_fsm_##FUNCTION)(os_fsm_t *_state, ##__VA_ARGS__)
+#else
+#define OS_FSM_FUNC(FUNCTION)                       void (os_fsm_##FUNCTION)(os_fsm_t *_state, void *p)
+#endif
+
+/* 运行有限状态机调度 */
+#if COMPILER_SUPPORT_VA_ARGS
+#define OS_RUN_FSM(FUNCTION, NAME, ...)             do{(os_fsm_##FUNCTION)(&(NAME), ##__VA_ARGS__);}while(0)
+#else
+#define OS_RUN_FSM(FUNCTION, NAME, PTR)             do{(os_fsm_##FUNCTION)(&(NAME), PTR);}while(0)
+#endif
+
+/* 有限状态机调度开始定义 */
+#define OS_FSM_START()                              switch(*_state){default:
+
+/* 有限状态机调度结束定义 */
+#define OS_FSM_END()                                break;}(*_state)=0
+
+/* 跳出当前有限状态机，保存状态机状态，等下一次执行时继续运行 */
+#define OS_FSM_YIELD()                              do{(*_state)=(((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U);return;case (((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U):;}while(0)
+
+/* 有限状态机状态重新开始，下次运行时生效。 */
+#define OS_FSM_RESTART()                            do{(*_state)=0;return;}while(0)
+
+/* 设置有限状态机状态 */
+#define OS_FSM_SET_STATE()                          do{(*_state)=(((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U);case (((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U):;}while(0)
+
+/* 从当前有限状态机函数返回，等下一次执行时从上次状态继续运行 */
+#define OS_FSM_RETURN()                             do{return;}while(0)
+
+/* 复位另一个有限状态机，在下次运行时从头开始 */
+#define OS_FSM_RESET_ANOTHER(ANAME)                 do{ANAME=0;}while(0)
 
 #endif /* _TINY_MACRO_OS_H_ */

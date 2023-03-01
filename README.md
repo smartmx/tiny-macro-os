@@ -526,6 +526,48 @@ void tmos_test_main(void)
     }
 }
 ```
+### Finite State Machines有限状态机函数
+
+有限状态机函数是没有时间管理的纯protothread函数，它适合没有时间概念的事件型驱动。  
+例如，蓝牙BLE主机枚举从机，通过不同的事件上报过来进行状态的处理分析。  
+fsm的处理函数是可重入的，通过传递不同的line参数来进行调用。  
+
+```c
+os_fsm_t fsm1, fsm2;
+
+OS_FSM_FUNC(example, int *p)
+{
+    OS_FSM_START();
+    printf("step1 %d\n", *p);
+    OS_FSM_YIELD();
+    printf("step2 %d\n", *p);
+    OS_FSM_SET_STATE();
+    printf("step3 %d\n", *p);
+    if (*p < 3)
+    {
+        *p++;
+        OS_FSM_RETURN();
+    }
+    else
+    {
+        *p = 0;
+        OS_FSM_RESTART();
+    }
+    printf("step4 %d\n", *p);
+    OS_FSM_END();
+}
+
+void tmos_test_main(void)
+{
+    int a = 0, b = 1;
+    while (1)
+    {
+        OS_RUN_FSM(example, fsm1, &a);
+        OS_RUN_FSM(example, fsm2, &b);
+        delay_ms(100);
+    }
+}
+```
 
 ## 注意事项
 

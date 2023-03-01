@@ -448,6 +448,43 @@ void tmos_test_main(void)
     }
 }
 
+#elif 1
+/* os fsm. */
+os_fsm_t fsm1, fsm2;
+
+OS_FSM_FUNC(example, int *p)
+{
+    OS_FSM_START();
+    printf("step1 %d\n", *p);
+    OS_FSM_YIELD();
+    printf("step2 %d\n", *p);
+    OS_FSM_SET_STATE();
+    printf("step3 %d\n", *p);
+    if (*p < 3)
+    {
+        *p++;
+        OS_FSM_RETURN();
+    }
+    else
+    {
+        *p = 0;
+        OS_FSM_RESTART();
+    }
+    printf("step4 %d\n", *p);
+    OS_FSM_END();
+}
+
+void tmos_test_main(void)
+{
+    int a = 0, b = 1;
+    while (1)
+    {
+        OS_RUN_FSM(example, fsm1, &a);
+        OS_RUN_FSM(example, fsm2, &b);
+        delay_ms(100);
+    }
+}
+
 #endif
 
 #else   /* COMPILER_SUPPORT_VA_ARGS=0 */

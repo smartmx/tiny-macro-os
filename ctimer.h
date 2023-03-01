@@ -29,7 +29,7 @@
 
 #include "tiny-macro-os.h"
 
-/* 如果准备使用ctimer，需要在tiny-macro-os.h中的任务枚举中添加ctimer，并在主任务循环中，添加ctimer任务调用OS_RUN_TASK(ctimer)。 */
+/* 如果准备使用ctimer，需要在tiny-macro-os.h中的任务枚举中添加os_ctimer，并在主任务循环中，调用OS_RUN_TASK(os_ctimer)。 */
 
 /* 用于用户自己更改全局变量名称，方便一个程序包含多个tiny macro os进行调度 */
 #define TASK_CTIMERS os_task_ctimers
@@ -69,7 +69,7 @@ extern ctimer_t TASK_CTIMERS[CTIMER_MAX_NUM];
 /* 函数任务系统调度结束定义 */
 #define OS_CTIMER_TASK_END()                                break;}(*lc)=0;return (TINY_MACRO_OS_TIME_MAX)
 
-/* 函数任务系统调度结束定义 */
+/* 函数任务系统调度重新开始定义 */
 #define OS_CTIMER_TASK_RESTART()                            do{(*lc)=0;return 0;}while(0)
 
 /* 退出当前任务，并等待对应时间，保存当前运行位置，时间单位CTIMER_PERIOD_TICKS。 */
