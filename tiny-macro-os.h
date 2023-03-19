@@ -204,41 +204,52 @@ extern volatile TINY_MACRO_OS_LINE_t                OS_LINES[TINY_MACRO_OS_TASKS
 
 /* SubNT子任务调用SubNT子任务 */
 #if COMPILER_SUPPORT_VA_ARGS
-#define OS_SUBNT_CALL_SUBNT(NAME, ...)              do{os_task_lc=(TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U;return 0U; case (TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U:{ TINY_MACRO_OS_TIME_t st; st=(NAME##_subnt)(__VA_ARGS__); if(st!=TINY_MACRO_OS_TIME_MAX) {return st;}}} while(0)
+#define OS_SUBNT_CALL_SUBNT(NAME, ...)              do{*os_task_lc=(TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U;return 0U; case (TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U:{ TINY_MACRO_OS_TIME_t st; st=(NAME##_subnt)(__VA_ARGS__); if(st!=TINY_MACRO_OS_TIME_MAX) {return st;}}} while(0)
 #else
-#define OS_SUBNT_CALL_SUBNT(NAME)                   do{os_task_lc=(TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U;return 0U; case (TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U:{ TINY_MACRO_OS_TIME_t st; st=(NAME##_subnt)(); if(st!=TINY_MACRO_OS_TIME_MAX) {return st;}}} while(0)
+#define OS_SUBNT_CALL_SUBNT(NAME)                   do{*os_task_lc=(TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U;return 0U; case (TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U:{ TINY_MACRO_OS_TIME_t st; st=(NAME##_subnt)(); if(st!=TINY_MACRO_OS_TIME_MAX) {return st;}}} while(0)
 #endif
 
 /* SubNT子任务函数声明，os sub no time task. */
 #if COMPILER_SUPPORT_VA_ARGS
-#define OS_SUBNT(NAME, ...)                         TINY_MACRO_OS_TIME_t (NAME##_subnt)(__VA_ARGS__)
+#define OS_SUBNT(NAME, ...)                         TINY_MACRO_OS_LINE_t NAME##_subnt_line=0;\
+                                                    TINY_MACRO_OS_TIME_t (NAME##_subnt)(__VA_ARGS__)
 #else
-#define OS_SUBNT(NAME)                              TINY_MACRO_OS_TIME_t (NAME##_subnt)(void)
+#define OS_SUBNT(NAME)                              TINY_MACRO_OS_LINE_t NAME##_subnt_line=0;\
+                                                    TINY_MACRO_OS_TIME_t (NAME##_subnt)(void)
+#endif
+
+/* SubNT子任务函数声明，os sub no time task. */
+#if COMPILER_SUPPORT_VA_ARGS
+#define OS_SUBNT_EXTERN(NAME, ...)                  extern TINY_MACRO_OS_LINE_t NAME##_subnt_line;\
+                                                    extern TINY_MACRO_OS_TIME_t (NAME##_subnt)(__VA_ARGS__)
+#else
+#define OS_SUBNT_EXTERN(NAME)                       extern TINY_MACRO_OS_LINE_t NAME##_subnt_line;\
+                                                    extern TINY_MACRO_OS_TIME_t (NAME##_subnt)(void)
 #endif
 
 /* SubNT子任务函数调度开始定义 */
-#define OS_SUBNT_START()                            static TINY_MACRO_OS_LINE_t os_task_lc=0U;switch(os_task_lc){default:
+#define OS_SUBNT_START(NAME)                        TINY_MACRO_OS_LINE_t *os_task_lc=&(NAME##_subnt_line);switch(*os_task_lc){default:
 
 /* SubNT子任务函数调度结束定义 */
-#define OS_SUBNT_END()                              break;}os_task_lc=0U;return TINY_MACRO_OS_TIME_MAX
+#define OS_SUBNT_END(NAME)                          break;}NAME##_subnt_line=0U;return TINY_MACRO_OS_TIME_MAX
 
 /* 停止并且再不运行运行当前SubNT子任务，复位任务状态，下一次运行从头开始，只可以在本任务中使用。 */
-#define OS_SUBNT_EXIT()                             do{os_task_lc=0U;return TINY_MACRO_OS_TIME_MAX;}while(0)
+#define OS_SUBNT_EXIT()                             do{*os_task_lc=0U;return TINY_MACRO_OS_TIME_MAX;}while(0)
 
 /* 退出当前SubNT子任务，并等待对应时间，保存当前运行位置，时间单位为中断里定义的系统最小时间。 */
-#define OS_SUBNT_WAITX(TICKS)                       do{os_task_lc=((TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U);return (TICKS);case (((TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX)+1U):;}while(0)
+#define OS_SUBNT_WAITX(TICKS)                       do{*os_task_lc=((TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX+1U);return (TICKS);case (((TINY_MACRO_OS_LINE_t)(__LINE__)%TINY_MACRO_OS_LINE_MAX)+1U):;}while(0)
 
 /* 跳出当前SubNT子任务，保存当前运行位置，等下一次执行时继续运行 */
 #define OS_SUBNT_YIELD()                            OS_SUBNT_WAITX(0)
 
 /* 设置函数状态 */
-#define OS_SUBNT_SET_STATE()                        do{os_task_lc=(((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U);case (((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U):;}while(0)
+#define OS_SUBNT_SET_STATE()                        do{*os_task_lc=(((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U);case (((TINY_MACRO_OS_LINE_t)(__LINE__)%(TINY_MACRO_OS_LINE_MAX))+1U):;}while(0)
 
 /* 等待时间，不改变上一次函数跳转位置 */
 #define OS_SUBNT_CWAITX(TICKS)                      return (TICKS)
 
 /* 复位当前SubNT子任务，在指定时间后开始下一次运行，并从头开始 */
-#define OS_SUBNT_RESET(TICKS)                       do{os_task_lc=0;return (TICKS);}while(0)
+#define OS_SUBNT_RESET(TICKS)                       do{*os_task_lc=0;return (TICKS);}while(0)
 
 /* 等待条件 C 满足再继续向下执行SubNT子任务，查询频率为每ticks个时钟一次 */
 #define OS_SUBNT_WAIT_UNTIL(C, TICKS)               do{OS_SUBNT_WAITX(TICKS); if(!(C)) return (TICKS);} while(0)
@@ -251,6 +262,9 @@ extern volatile TINY_MACRO_OS_LINE_t                OS_LINES[TINY_MACRO_OS_TASKS
 
 /* SubNT子任务等待信号量，并有超时次数，查询频率为每ticks个时钟一次，超时时间为ticks*TIMES，所以ticks最好不要为0 */
 #define OS_SUBNT_WAIT_SEMX(SEM, TICKS, TIMES)       do{(SEM)=(TIMES)+1;OS_SUBNT_WAITX(TICKS); if((SEM)>1){(SEM)--;return (TICKS);}else{if((SEM)!=0){(SEM)=(OS_SEM_TIMEOUT);}}}while(0)
+
+/* 复位当前SubNT子任务，在指定时间后开始下一次运行，并从头开始 */
+#define OS_SUBNT_RESET_ANOTHER(ANAME)               do{(NAME##_subnt_line)=0;}while(0)
 
 /**************************没有时间管理的有限状态机函数，Finite State Machines，适合不确定时间的事件发生时的逻辑任务处理*******************************************/
 /* 有限状态机类型 */
