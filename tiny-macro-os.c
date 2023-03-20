@@ -401,13 +401,13 @@ void tmos_test_main(void)
 
 OS_SUBNT(sub_test1, unsigned char i)
 {
-    OS_SUBNT_START();
+    OS_SUBNT_START(sub_test1);
     while ((i % 10) != 0)
     {
         printf("sub_test1\n");
         OS_SUBNT_WAITX(OS_SEC_TICKS / 2);
     }
-    OS_SUBNT_END();
+    OS_SUBNT_END(sub_test1);
 }
 
 /*void参数表示函数无参数，可以不写该void，但是定义不标准，所以写上void最好 */
@@ -806,14 +806,14 @@ unsigned char i = 0;
 
 OS_SUBNT(sub_test1)
 {
-    OS_SUBNT_START();
+    OS_SUBNT_START(sub_test1);
     while ((i % 10) != 0)
     {
         printf("sub_test1\n");
         OS_SUBNT_WAITX(OS_SEC_TICKS / 2);
         i++;
     }
-    OS_SUBNT_END();
+    OS_SUBNT_END(sub_test1);
 }
 
 OS_TASK(os_test1)
