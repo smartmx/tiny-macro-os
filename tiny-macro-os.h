@@ -169,8 +169,14 @@ extern volatile TINY_MACRO_OS_LINE_t                OS_LINES[TINY_MACRO_OS_TASKS
 /* 等待信号量，并有超时次数，查询频率为每ticks个时钟一次，超时时间为ticks*TIMES，所以ticks最好不要为0 */
 #define OS_WAIT_SEMX(SEM, TICKS, TIMES)             do{(SEM)=(TIMES)+1;OS_TASK_WAITX(TICKS); if((SEM)>1){(SEM)--;return (TICKS);}else{if((SEM)!=0){(SEM)=(OS_SEM_TIMEOUT);}}}while(0)
 
+/* 安全等待中断中发送的信号量，并有超时次数，查询频率为每ticks个时钟一次，超时时间为ticks*TIMES，所以ticks最好不要为0 */
+#define OS_WAIT_PSEMX(SEM, TICKS, TIMES, P, E)      do{P;(SEM)=(TIMES)+1;E;OS_TASK_WAITX(TICKS); P;if((SEM)>1){(SEM)--;E;return (TICKS);}else{if((SEM)!=0){(SEM)=(OS_SEM_TIMEOUT);}E;}}while(0)
+
 /* 发送信号量 */
 #define OS_SEND_SEM(SEM)                            do{(SEM)=0;} while(0)
+
+/* 安全发送信号量 */
+#define OS_SEND_PSEM(SEM)                           do{if((SEM)!=(OS_SEM_TIMEOUT)){(SEM)=0;}} while(0)
 
 /*************************************以下函数只可以在其他任务函数中调用，不可以在自身函数中调用*******************************/
 /* 挂起另一个指定任务，不可挂起自身 */
@@ -306,6 +312,9 @@ extern volatile TINY_MACRO_OS_LINE_t                OS_LINES[TINY_MACRO_OS_TASKS
 
 /* SubNT子任务等待信号量，并有超时次数，查询频率为每ticks个时钟一次，超时时间为ticks*TIMES，所以ticks最好不要为0 */
 #define OS_SUBNT_WAIT_SEMX(SEM, TICKS, TIMES)       do{(SEM)=(TIMES)+1;OS_SUBNT_WAITX(TICKS); if((SEM)>1){(SEM)--;return (TICKS);}else{if((SEM)!=0){(SEM)=(OS_SEM_TIMEOUT);}}}while(0)
+
+/* SubNT子任务安全等待中断中发送的信号量，并有超时次数，查询频率为每ticks个时钟一次，超时时间为ticks*T，所以ticks最好不要为0 */
+#define OS_SUBNT_WAIT_PSEMX(SEM, TICKS, T, P, E)    do{P;(SEM)=(T)+1;E;OS_SUBNT_WAITX(TICKS); P;if((SEM)>1){(SEM)--;E;return (TICKS);}else{if((SEM)!=0){(SEM)=(OS_SEM_TIMEOUT);}E;}}while(0)
 
 /* 复位当前SubNT子任务，在指定时间后开始下一次运行，并从头开始 */
 #define OS_SUBNT_RESET_ANOTHER(ANAME)               do{(NAME##_subnt_line)=0;}while(0)

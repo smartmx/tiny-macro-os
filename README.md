@@ -139,7 +139,7 @@ unsigned short (os_test1_task)( void )
     };
     switch( os_task_linenums[(os_test1)] )
     {
-        case 0U:
+        default:
             ;
             while (1)
             {
@@ -188,7 +188,7 @@ unsigned short (os_test2_task)( unsigned char params, ... )
     };
     switch( os_task_linenums[(os_test2)] )
     {
-        case 0U:
+        default:
             ;
             while(1)
             {
