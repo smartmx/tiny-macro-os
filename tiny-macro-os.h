@@ -122,6 +122,9 @@ extern volatile TINY_MACRO_OS_LINE_t                OS_LINES[TINY_MACRO_OS_TASKS
 /* 更新系统时间，该函数可以一次减少数个ticks，在中断安全类型不足以满足延迟时间的情况下使用，在主循环中调用，TICKS参数放在中断中更新，提升中断安全性 */
 #define OS_UPDATES_TIMERS(TICKS)                    do{unsigned char i;for(i=0U;i<(TINY_MACRO_OS_TASKS_MAX_NUM);i++){if(OS_TIMERS[i]!=0U){if(OS_TIMERS[i]!=(TINY_MACRO_OS_TIME_MAX)){if(OS_TIMERS[i]>(TICKS)){OS_TIMERS[i]=(OS_TIMERS[i]-(TICKS));}else{OS_TIMERS[i]=0;}}}}} while(0)
 
+/* 获取可以空闲的时间，调用FUNC进行，用户可以在函数中休眠。 */
+#define OS_TIMERS_IDLE(FUNC)                        do{TINY_MACRO_OS_TIME_t idle_time=TINY_MACRO_OS_TIME_MAX;unsigned char i;for(i=0U;i<(TINY_MACRO_OS_TASKS_MAX_NUM);i++){if(idle_time>OS_TIMERS[i]){idle_time=OS_TIMERS[i];}}if(idle_time>0){FUNC(idle_time);}} while(0)
+
 /*********************************** 以下函数只可以在自身的任务函数中调用 *************************************/
 /* 停止并且再不运行运行当前任务，复位任务状态，下一次运行从头开始，只可以在本任务中使用。 */
 #define OS_TASK_EXIT()                              do{OS_LINES[(_task_name)]=0U;return (TINY_MACRO_OS_TIME_MAX);}while(0)
