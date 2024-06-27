@@ -125,6 +125,13 @@ extern volatile TINY_MACRO_OS_LINE_t                OS_LINES[TINY_MACRO_OS_TASKS
 /* 获取可以空闲的时间，调用FUNC进行，用户可以在函数中休眠。 */
 #define OS_TIMERS_IDLE(FUNC)                        do{TINY_MACRO_OS_TIME_t idle_time=TINY_MACRO_OS_TIME_MAX;unsigned char i;for(i=0U;i<(TINY_MACRO_OS_TASKS_MAX_NUM);i++){if(idle_time>OS_TIMERS[i]){idle_time=OS_TIMERS[i];}}if(idle_time>0){FUNC(idle_time);}} while(0)
 
+/* 在通用函数中死等，可以通过传入FUNC函数，在FUNC函数中调用所有任务，从而达到在通用函数中死等而不影响任务运行的目的，需要注意使用的ANAME应当是一个暂时不使用的任任务名 */
+#if COMPILER_SUPPORT_VA_ARGS
+#define OS_HOLD_HERE(ANAME, TIMES, FUNC, ...)       do{OS_TIMERS[(ANAME)]=TIMES;while(OS_TIMERS[(ANAME)] != 0){FUNC(__VA_ARGS__);}} while(0)
+#else
+#define OS_HOLD_HERE(ANAME, TIMES, FUNC)            do{OS_TIMERS[(ANAME)]=TIMES;while(OS_TIMERS[(ANAME)] != 0){FUNC();}} while(0)
+#endif
+
 /*********************************** 以下函数只可以在自身的任务函数中调用 *************************************/
 /* 停止并且再不运行运行当前任务，复位任务状态，下一次运行从头开始，只可以在本任务中使用。 */
 #define OS_TASK_EXIT()                              do{OS_LINES[(_task_name)]=0U;return (TINY_MACRO_OS_TIME_MAX);}while(0)
