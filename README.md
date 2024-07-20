@@ -578,3 +578,5 @@ void tmos_test_main(void)
 宏定义中参数为`SUBNAME`的，该SUBNAME代表的子任务必须没有在主函数中循环执行
 
 ## [博客主页](https://blog.maxiang.vip/)
+
+QQ交流群：562090553
