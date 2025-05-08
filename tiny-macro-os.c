@@ -96,7 +96,7 @@ OS_TASK(os_test1, void)
 }
 
 /* 带参数任务编写格式函数参数直接作为宏定义中的成员写进去即可 */
-OS_TASK(os_test2, unsigned char params, ...)
+OS_TASK(os_test2, unsigned char params)
 {
     OS_TASK_START(os_test2);
     /* 禁止在OS_TASK_START和OS_TASK_END之间使用switch */
@@ -140,7 +140,7 @@ OS_TASK(os_test1, void)
 }
 
 /* 带参数任务编写格式函数参数直接作为宏定义中的成员写进去即可 */
-OS_TASK(os_test2, unsigned char params, ...)
+OS_TASK(os_test2, unsigned char params)
 {
     /* OS_TASK_WAIT_UNTILX需要一个常驻变量保存时间信息，可以是全局变量或局部静态变量 */
     static unsigned char timecnt;
@@ -356,7 +356,7 @@ OS_TASK(os_test1, void)
 }
 
 /* 带参数任务编写格式函数参数直接作为宏定义中的成员写进去即可 */
-OS_TASK(os_test2, unsigned char params, ...)
+OS_TASK(os_test2, unsigned char params)
 {
     OS_TASK_START(os_test2);
     /* 禁止在OS_TASK_START和OS_TASK_END之间使用switch */
@@ -424,7 +424,7 @@ OS_TASK(os_test1, void)
 }
 
 /* 带参数任务编写格式函数参数直接作为宏定义中的成员写进去即可 */
-OS_TASK(os_test2, unsigned char params, ...)
+OS_TASK(os_test2, unsigned char params)
 {
     OS_TASK_START(os_test2);
     /* 禁止在OS_TASK_START和OS_TASK_END之间使用switch */
